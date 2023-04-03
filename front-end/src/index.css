@@ -1,3 +1,22 @@
+:root {
+  --bg-black: rgb(0, 0, 0);
+
+  --bg-dark: rgb(18, 18, 18);
+  --bg-dark-1: rgb(26, 26, 26);
+  --bg-dark-2: rgb(26, 26, 26);
+  --bg-dark-3: rgb(37, 37, 37);
+  --bg-dark-4: rgba(255, 255, 255, 0.08);
+
+  --bg-white: rgb(255, 255, 255);
+  --color-white: rgb(255, 255, 255);
+
+  --color-dark: rgb(18, 18, 18);
+
+  --color-orange: rgb(245, 197, 24);
+
+  --color-light-blue: rgb(60, 161, 192);
+}
+
 * {
   padding: 0;
   margin: 0;
@@ -7,6 +26,8 @@
 html, body {
   padding: 0;
   margin: 0;
+  background: var(--bg-black);
+  color: var(--color-white);
 }
 
 a {
