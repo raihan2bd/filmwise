@@ -103,3 +103,46 @@ a:active, button:active {
   text-align: right;
 }
 
+.bg-black {
+  background: var(--bg-black);
+}
+
+.bg-dark {
+  background: var(--bg-dark);
+}
+
+.bg-dark-1 {
+  background: var(--bg-dark-1);
+}
+
+.bg-dark-2 {
+  background: var(--bg-dark-2);
+}
+
+.bg-dark-3 {
+  background: var(--bg-dark-3);
+}
+
+.bg-dark-4 {
+  background: var(--bg-dark-4);
+}
+
+.bg-white {
+  background: var(--bg-white)
+}
+
+.color-white {
+  color: var(--color-white);
+}
+
+.color-dark {
+  color: var(--color-dark);
+}
+
+.color-orange {
+  color: var(--color-orange);
+}
+
+.color-light-blue {
+  color: var(--color-light-blue);
+}
