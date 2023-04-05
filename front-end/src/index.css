@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap');
+
 :root {
   --bg-black: rgb(0, 0, 0);
 
@@ -28,6 +30,7 @@ html, body {
   margin: 0;
   background: var(--bg-black);
   color: var(--color-white);
+  font-family: 'Lato', sans-serif;
 }
 
 a {
@@ -99,6 +102,14 @@ a:active, button:active {
   align-items: flex-end;
 }
 
+.gap-1 {
+  gap: 1rem;
+}
+
+.gap-2 {
+  gap: 2rem;
+}
+
 .p-1 {
   padding: 1rem;
 }
@@ -127,6 +138,10 @@ a:active, button:active {
   margin-bottom: 1rem;
 }
 
+.active {
+  background: var(--bg-dark-4);
+}
+
 .text-center {
   text-align: center;
 }
@@ -137,6 +152,10 @@ a:active, button:active {
 
 .text-right {
   text-align: right;
+}
+
+.list-style-none {
+  list-style: none;
 }
 
 .bg-black {
@@ -181,4 +200,36 @@ a:active, button:active {
 
 .color-light-blue {
   color: var(--color-light-blue);
+}
+
+@media (max-width: 767px) {
+  .d-flex-sm-row {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .d-flex-sm-column {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .md-content {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .d-flex-md-row {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .d-flex-md-column {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sm-content {
+    display: none;
+  }
 }
