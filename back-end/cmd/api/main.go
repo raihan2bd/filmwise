@@ -7,8 +7,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/raihan2bd/filmwise/models"
 )
@@ -36,19 +38,56 @@ type AppStatus struct {
 type application struct {
 	config config
 	logger *log.Logger
-	models models.DBModel
+	models models.Models
 }
 
 func main() {
 	var cfg config
 
+	// get Environment variables
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "4000"
+	}
+	env := os.Getenv("ENV")
+	if env == "" {
+		env = "development"
+	}
+	dsn := os.Getenv("DATABASE_URI")
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "jwt-secret"
+	}
+
+	// initialize config
+	portNum, err := strconv.Atoi(port)
+	if err != nil {
+		log.Fatal("Port should be a number")
+	}
+	cfg.port = portNum
+	cfg.env = env
+	cfg.db.dsn = dsn
+	cfg.jwt.secret = jwtSecret
+
+	// setup logger
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
+	// connect with database
 	db, err := openDB(cfg)
 	if err != nil {
 		logger.Fatal(err)
 	}
 	defer db.Close()
+
+	app := &application{
+		config: cfg,
+		logger: logger,
+		models: models.NewModels(db),
+	}
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.port),
@@ -58,7 +97,7 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
 		panic(err)
 	}
