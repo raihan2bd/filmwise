@@ -63,6 +63,42 @@ a:active, button:active {
   flex-direction: row;
 }
 
+.jc-center {
+  justify-content: center;
+}
+
+.jc-start {
+  justify-content: start;
+}
+
+.jc-end {
+  justify-content: end;
+}
+
+.jc-space-between {
+  justify-content: space-between;
+}
+
+.jc-space-around {
+  justify-content: space-around;
+}
+
+.jc-space-evenly {
+  justify-content: space-evenly;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.align-items-start {
+  align-items: flex-start;
+}
+
+.align-items-end {
+  align-items: flex-end;
+}
+
 .p-1 {
   padding: 1rem;
 }
