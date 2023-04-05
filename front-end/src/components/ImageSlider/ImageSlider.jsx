@@ -18,7 +18,7 @@ const ImageSlider = () => {
         </h2>
       </div>
     </div>,
-    <div className={classes.slider_item} data-value="1">
+    <div className={classes.slider_item} data-value="2">
       <div className={classes.slider_image}>
         <img src={Forrest_gump_img} alt="Movie2" />
       </div>
@@ -28,7 +28,7 @@ const ImageSlider = () => {
         </h2>
       </div>
     </div>,
-    <div className={classes.slider_item} data-value="1">
+    <div className={classes.slider_item} data-value="3">
       <div className={classes.slider_image}>
         <img src={Forrest_gump_img} alt="Movie3" />
       </div>
@@ -39,18 +39,19 @@ const ImageSlider = () => {
       </div>
     </div>,
   ];
-  return (
+  return [
     <AliceCarousel
       items={items}
       autoPlay
-      autoPlayControls
+      disableDotsControls
       autoPlayStrategy="none"
-      autoPlayInterval={3000}
+      autoPlayInterval={2000}
       animationDuration={2000}
       animationType="fadeout"
       infinite
+      disableButtonsControls
     />
-  );
+  ];
 };
 
 export default ImageSlider;
