@@ -39,7 +39,7 @@ const ImageSlider = () => {
       </div>
     </div>,
   ];
-  return [
+  return (
     <AliceCarousel
       items={items}
       autoPlay
@@ -51,7 +51,7 @@ const ImageSlider = () => {
       infinite
       disableButtonsControls
     />
-  ];
+  );
 };
 
 export default ImageSlider;
