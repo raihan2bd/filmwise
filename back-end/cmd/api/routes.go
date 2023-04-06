@@ -9,7 +9,7 @@ import (
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
 
-	router.GET("/api/status", app.Index)
+	router.HandlerFunc(http.MethodGet, "/status", app.GetStatus)
 
-	return router
+	return app.enableCORS(router)
 }
