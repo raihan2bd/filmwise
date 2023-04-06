@@ -32,3 +32,7 @@ CREATE TABLE movies_genres (
       FOREIGN KEY(genre_id)
       REFERENCES genres(id)
 );
+
+-- Alter table movies rating column type int to float
+alter table movies
+  alter column rating type float4;
