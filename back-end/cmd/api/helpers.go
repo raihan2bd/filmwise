@@ -20,3 +20,21 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data interf
 	w.Write(js)
 	return nil
 }
+
+// errorJSON function helps to write error json response
+func (app *application) errorJSON(w http.ResponseWriter, err error, status ...int) {
+	statusCode := http.StatusBadRequest
+	if len(status) > 0 {
+		statusCode = status[0]
+	}
+
+	type jsonError struct {
+		Message string `json:"message"`
+	}
+
+	theError := jsonError{
+		Message: err.Error(),
+	}
+
+	app.writeJSON(w, statusCode, theError, "error")
+}

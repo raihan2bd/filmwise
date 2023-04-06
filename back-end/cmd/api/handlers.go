@@ -15,21 +15,3 @@ func (app *application) GetStatus(w http.ResponseWriter, r *http.Request) {
 		app.logger.Println(err)
 	}
 }
-
-// errorJSON function helps to write error json response
-func (app *application) errorJSON(w http.ResponseWriter, err error, status ...int) {
-	statusCode := http.StatusBadRequest
-	if len(status) > 0 {
-		statusCode = status[0]
-	}
-
-	type jsonError struct {
-		Message string `json:"message"`
-	}
-
-	theError := jsonError{
-		Message: err.Error(),
-	}
-
-	app.writeJSON(w, statusCode, theError, "error")
-}
