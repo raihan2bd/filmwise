@@ -17,3 +17,18 @@ CREATE TABLE genres (
     created_at timestamp,
     updated_at timestamp
 );
+
+-- Create Join table for movies and genres
+CREATE TABLE movies_genres (
+    id serial not null primary key,
+    movie_id integer not null,
+    genre_id integer not null,
+    created_at timestamp,
+    updated_at timestamp,
+    CONSTRAINT fk_movie_id
+      FOREIGN KEY(movie_id)
+      REFERENCES movies(id),
+    CONSTRAINT fk_genre_id
+      FOREIGN KEY(genre_id)
+      REFERENCES genres(id)
+);
