@@ -9,3 +9,11 @@ CREATE TABLE movies (
   created_at timestamp,
   updated_at timestamp
 );
+
+-- Create genres table inside the database
+CREATE TABLE genres (
+    id serial not null primary key,
+    genre_name varchar(100) not null,
+    created_at timestamp,
+    updated_at timestamp
+);
