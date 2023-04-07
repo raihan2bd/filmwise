@@ -56,3 +56,18 @@ func (app *application) getAllMoviesByGenre(w http.ResponseWriter, r *http.Reque
 		return
 	}
 }
+
+// Get all genres
+func (app *application) getAllGenres(w http.ResponseWriter, r *http.Request) {
+	genres, err := app.models.DB.GenresAll()
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, genres, "genres")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+}
