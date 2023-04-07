@@ -2,10 +2,11 @@
 CREATE TABLE movies (
   id serial not null primary key,
   title varchar(255) not null,
-  description text,
+  description text not null,
   release_date date,
-  runtime integer,
-  rating integer,
+  year integer not null,
+  runtime integer not null,
+  rating integer not null,
   created_at timestamp,
   updated_at timestamp
 );
