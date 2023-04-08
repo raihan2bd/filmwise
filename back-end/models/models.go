@@ -52,3 +52,11 @@ type MovieGenre struct {
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
 }
+
+// MovieFilter will help to organize query
+type MovieFilter struct {
+	FindByName    string
+	FilterByGenre string
+	FilterByYear  string
+	OrderBy       string
+}
