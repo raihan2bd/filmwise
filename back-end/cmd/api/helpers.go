@@ -2,8 +2,36 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strconv"
+	"strings"
 )
+
+// struct for query parameters
+type queryParam struct {
+	key   string
+	value interface{}
+}
+
+// helper function to validate query parameters and return an error if invalid
+func validateQueryParam(key, value string) (interface{}, error) {
+	switch key {
+	case "s":
+		return strings.ToLower(value), nil
+	case "page", "limit", "genre", "year":
+		return strconv.Atoi(value)
+	case "order_by":
+		switch value {
+		case "rating", "runtime", "old", "name":
+			return value, nil
+		default:
+			return "", errors.New("invalid order_by value")
+		}
+	default:
+		return "", errors.New("invalid query parameter")
+	}
+}
 
 // writeJson function helps to write json response
 func (app *application) writeJSON(w http.ResponseWriter, status int, data interface{}, wrap string) error {
