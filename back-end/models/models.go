@@ -56,7 +56,14 @@ type MovieGenre struct {
 // MovieFilter will help to organize query
 type MovieFilter struct {
 	FindByName    string
-	FilterByGenre string
-	FilterByYear  string
+	FilterByGenre int
+	FilterByYear  int
 	OrderBy       string
+}
+
+// query params helps to organize query parameters
+// struct for query parameters
+type QueryParam struct {
+	Key   string
+	Value interface{}
 }

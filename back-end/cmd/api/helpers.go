@@ -8,12 +8,6 @@ import (
 	"strings"
 )
 
-// struct for query parameters
-type queryParam struct {
-	key   string
-	value interface{}
-}
-
 // helper function to validate query parameters and return an error if invalid
 func validateQueryParam(key, value string) (interface{}, error) {
 	switch key {

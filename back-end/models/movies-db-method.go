@@ -183,27 +183,56 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter) (
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	offset := (page - 1) * perPage
+	// offset := (page - 1) * perPage
+	// fmt.Println(offset, perPage)
 
-	query := fmt.Sprintf(`select m.id, m.title, m.description, m.year, m.release_date, m.rating, m.runtime, m.created_at, m.updated_at,
-            mg.id, mg.movie_id, mg.genre_id, g.genre_name
-            from movies m
-            left join movies_genres mg on (m.id = mg.movie_id)
-            left join genres g on (g.id = mg.genre_id)
-						where %s %s %s
-						order by %s
-            limit $1 offset $2`, filter.FindByName, filter.FilterByGenre, filter.FilterByYear, filter.OrderBy)
+	var dbArgs []interface{}
+	where := " WHERE (title LIKE $1 OR description LIKE $2)"
+	dbArgs = append(dbArgs, "%"+filter.FindByName+"%", "%"+filter.FindByName+"%")
+	// if filter.FilterByYear > 0 {
+	// 	where += " and year = $3"
+	// 	dbArgs = append(dbArgs, filter.FilterByYear)
+	// }
+	// if filter.FilterByGenre > 0 && filter.FilterByYear <= 0 {
+	// 	where += " and m.id in (select movie_id from movies_genres where genre_id = $4)"
+	// 	dbArgs = append(dbArgs, filter.FilterByGenre)
+	// }
 
-	stmt, err := m.DB.PrepareContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
+	// if (filter.FilterByGenre > 0) && (filter.FilterByYear > 0) {
+	// 	where += " and m.id in (select movie_id from movies_genres where genre_id = $5)"
+	// 	dbArgs = append(dbArgs, filter.FilterByGenre)
+	// }
 
-	rows, err := stmt.QueryContext(ctx,
-		perPage,
-		offset,
-	)
+	// add order by query
+	// orderByQuery := ""
+	// switch filter.OrderBy {
+	// case "rating":
+	// 	orderByQuery = " order by rating desc"
+	// case "runtime":
+	// 	orderByQuery = " order by runtime desc"
+	// case "old":
+	// 	orderByQuery = " order by release_date asc"
+	// case "name":
+	// 	orderByQuery = " order by title asc"
+	// default:
+	// 	orderByQuery = " order by release_date desc"
+	// }
+
+	limitQuery := " limit $3"
+	dbArgs = append(dbArgs, perPage)
+	// offsetQuery := fmt.Sprintf(" OFFSET %d", offset)
+	// dbArgs = append(dbArgs, perPage, offset)
+
+	// paginationQuery := " limit $3 offset $4 ;"
+
+	query := `select m.id, m.title, m.description, m.year, m.release_date, m.rating, m.runtime, m.created_at, m.updated_at,
+	mg.id, mg.movie_id, mg.genre_id, g.genre_name
+	from movies m
+	left join movies_genres mg on (m.id = mg.movie_id)
+	left join genres g on (g.id = mg.genre_id)`
+	query += where + limitQuery + ";"
+
+	rows, err := m.DB.QueryContext(ctx, query, dbArgs...)
 	if err != nil {
 		return nil, err
 	}
