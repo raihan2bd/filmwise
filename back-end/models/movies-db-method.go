@@ -109,6 +109,7 @@ func (m *DBModel) GenresAll() ([]*Genre, error) {
 	return genres, nil
 }
 
+// Get all movies by filter
 func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter) ([]*Movie, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
