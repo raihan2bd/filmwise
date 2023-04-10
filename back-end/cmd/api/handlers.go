@@ -125,3 +125,18 @@ func (app *application) getAllGenres(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// AddNewMovie will insert a new movie
+func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
+	var movie models.Movie
+
+	err := app.readJSON(w, r, &movie)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+	err = app.writeJSON(w, http.StatusOK, movie, "movie")
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+}
