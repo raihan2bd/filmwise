@@ -6,7 +6,7 @@ import (
 )
 
 type Validator struct {
-	Errors map[string]string
+	Errors map[string]string `json:"errors"`
 }
 
 func New() *Validator {
@@ -29,7 +29,7 @@ func (v *Validator) Check(ok bool, key, message string) {
 	}
 }
 
-func (v *Validator) Required(data, key, message string, minLength, maxLength int) {
+func (v *Validator) Required(data, key, message string) {
 	if len(strings.Trim(data, "")) <= 0 {
 		v.AddError("key", message)
 	}
@@ -38,8 +38,8 @@ func (v *Validator) Required(data, key, message string, minLength, maxLength int
 func (v *Validator) IsLength(data, key, message string, minLength, maxLength int) {
 	trimData := len(strings.Trim(data, ""))
 
-	if trimData < minLength && trimData > maxLength {
-		v.AddError("key", message)
+	if trimData < minLength || trimData > maxLength {
+		v.AddError(key, message)
 	}
 }
 

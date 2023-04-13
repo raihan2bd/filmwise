@@ -49,13 +49,23 @@ func (app *application) badRequest(w http.ResponseWriter, r *http.Request, err e
 }
 
 // writeJson function helps to write json response
-func (app *application) writeJSON(w http.ResponseWriter, status int, data interface{}, wrap string) error {
-	wrapper := make(map[string]interface{})
-	wrapper[wrap] = data
+func (app *application) writeJSON(w http.ResponseWriter, status int, data interface{}, wrap ...string) error {
+	var js []byte
+	var err error
+	if len(wrap) > 0 {
 
-	js, err := json.Marshal(wrapper)
-	if err != nil {
-		return err
+		wrapper := make(map[string]interface{})
+		wrapper[wrap[0]] = data
+
+		js, err = json.Marshal(wrapper)
+		if err != nil {
+			return err
+		}
+	} else {
+		js, err = json.Marshal(data)
+		if err != nil {
+			return err
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
