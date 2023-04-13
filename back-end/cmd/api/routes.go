@@ -15,7 +15,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/genres", app.getAllGenres)
 
 	// private routes for admin
-	router.HandlerFunc(http.MethodGet, "/v1/admin/movie/add", app.AddNewMovie)
+	router.HandlerFunc(http.MethodPost, "/v1/admin/movie/add", app.AddNewMovie)
 
 	return app.enableCORS(router)
 }
