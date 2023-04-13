@@ -2,7 +2,9 @@ package models
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -219,4 +221,70 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter) (
 	}
 
 	return movies, nil
+}
+
+// InsertMovie is help to insert new movie to the database
+func (m *DBModel) InsertMovie(movie *Movie) (int, map[int]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	movieID := 0
+	var movieGenres = make(map[int]string)
+
+	// return if movie title is already exist
+	q := `select id from movies where title = $1`
+	_ = m.DB.QueryRowContext(ctx, q, movie.Title).Scan(&movieID)
+	fmt.Println(movieID)
+	if movieID > 0 {
+		return movieID, movieGenres, errors.New("the movie was already exist")
+	}
+
+	// verify genres
+	for _, val := range movie.MovieGenre {
+		genreID := 0
+		query := `select id from genres where genre_name = $1`
+		err := m.DB.QueryRowContext(ctx, query, val).Scan(&genreID)
+		if err != nil {
+			return movieID, movieGenres, errors.New("invalid genre name")
+		}
+		fmt.Println(genreID)
+		if genreID > 0 {
+			if _, exists := movieGenres[genreID]; !exists {
+				movieGenres[genreID] = val
+			}
+		}
+	}
+
+	if len(movieGenres) <= 0 {
+		movieGenres[10] = "Unknown"
+	}
+
+	stmt := `insert into movies (title, description, year, release_date, runtime, rating,
+		created_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id`
+
+	err := m.DB.QueryRowContext(ctx, stmt,
+		movie.Title,
+		movie.Description,
+		movie.Year,
+		movie.ReleaseDate,
+		movie.Runtime,
+		movie.Rating,
+		time.Now(),
+		time.Now(),
+	).Scan(&movieID)
+	if err != nil {
+		log.Println(err)
+		return movieID, movieGenres, errors.New("invalid movie data! failed to save the movie")
+	}
+
+	for key, _ := range movieGenres {
+		stmt = `insert into movies_genres ( genre_id, movie_id, created_at, updated_at)
+						values($1, $2, $3, $4)`
+		_, err = m.DB.ExecContext(ctx, stmt, key, movieID, time.Now(), time.Now())
+		if err != nil {
+			return movieID, movieGenres, err
+		}
+	}
+	return movieID, movieGenres, nil
 }
