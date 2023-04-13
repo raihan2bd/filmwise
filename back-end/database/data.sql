@@ -18,3 +18,16 @@ insert into movies (title, description, release_date, runtime, rating, created_a
     ('The Pursuit of Happyness', 'Based on a true story about a man named Christopher Gardner.', '2006-12-15', 117, 8.0, '2023-04-06', '2023-04-06'),
     ('The Dark Knight', 'The menace known as the Joker wreaks havoc on Gotham City.', '2008-07-18', 152, 9.0, '2023-04-06', '2023-04-06'),
     ('Forrest Gump', 'Forrest Gump is a simple man with a low I.Q. but good intentions.', '1994-07-06', 142, 8.8, '2023-04-06', '2023-04-06');
+
+    -- Inset dummy data into movies_genres
+    INSERT INTO public.movies_genres (movie_id,genre_id,created_at,updated_at) VALUES
+	 (1,1,'2023-04-06 00:00:00.000','2023-04-06 00:00:00.000'),
+	 (1,2,'2023-04-06 00:00:00.000','2023-04-06 00:00:00.000'),
+	 (1,6,'2023-04-06 00:00:00.000','2023-04-06 00:00:00.000'),
+	 (2,1,'2023-04-06 00:00:00.000','2023-04-06 00:00:00.000'),
+	 (3,1,'2023-04-06 00:00:00.000','2023-04-06 00:00:00.000'),
+	 (3,2,'2023-04-06 00:00:00.000','2023-04-06 00:00:00.000'),
+	 (3,3,'2023-04-06 00:00:00.000','2023-04-06 00:00:00.000'),
+	 (3,6,'2023-04-06 00:00:00.000','2023-04-06 00:00:00.000'),
+	 (4,1,'2023-04-06 00:00:00.000','2023-04-06 00:00:00.000'),
+	 (4,9,'2023-04-06 00:00:00.000','2023-04-06 00:00:00.000');

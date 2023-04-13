@@ -1,7 +1,7 @@
 -- Create movies table inside the database
 CREATE TABLE movies (
   id serial not null primary key,
-  title varchar(255) not null,
+  title varchar(255) not null unique,
   description text not null,
   release_date date,
   year integer not null,
@@ -33,6 +33,7 @@ CREATE TABLE movies_genres (
       FOREIGN KEY(genre_id)
       REFERENCES genres(id)
 );
+
 
 -- Alter table movies rating column type int to float
 alter table movies
