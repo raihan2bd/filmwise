@@ -8,6 +8,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/raihan2bd/filmwise/models"
+	"github.com/raihan2bd/filmwise/validator"
 )
 
 // constants for default values
@@ -130,11 +131,29 @@ func (app *application) getAllGenres(w http.ResponseWriter, r *http.Request) {
 func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
 	var movie models.Movie
 
+	// read json from the body
 	err := app.readJSON(w, r, &movie)
 	if err != nil {
 		app.badRequest(w, r, err)
 		return
 	}
+
+	validation := validator.New()
+	validation.IsLength(movie.Title, "title", "title should be minimum 3 to 255 characters long!", 3, 255)
+
+	if validation.Valid() {
+		app.logger.Println("form is validated")
+	} else {
+		// read json from the body
+		err := app.writeJSON(w, http.StatusBadRequest, validation)
+		if err != nil {
+			app.badRequest(w, r, err)
+			return
+		}
+		app.logger.Println("for isn't validated")
+		return
+	}
+
 	err = app.writeJSON(w, http.StatusOK, movie, "movie")
 	if err != nil {
 		app.errorJSON(w, err)
