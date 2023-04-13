@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -35,11 +36,15 @@ func (v *Validator) Required(data, key, message string) {
 	}
 }
 
-func (v *Validator) IsLength(data, key, message string, minLength, maxLength int) {
+func (v *Validator) IsLength(data, key string, minLength, maxLength int, message ...string) {
 	trimData := len(strings.Trim(data, ""))
 
 	if trimData < minLength || trimData > maxLength {
-		v.AddError(key, message)
+		msg := fmt.Sprintf("%s should be minimum %d to maximum %d characters long!", key, minLength, maxLength)
+		if len(message) > 0 {
+			msg = message[0]
+		}
+		v.AddError(key, msg)
 	}
 }
 
