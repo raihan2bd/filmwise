@@ -225,3 +225,7 @@ func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
 		app.errorJSON(w, err)
 	}
 }
+
+func (app *application) UpdateMovie(w http.ResponseWriter, r *http.Request) {
+
+}
