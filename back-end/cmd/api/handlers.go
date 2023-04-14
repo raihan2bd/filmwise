@@ -202,6 +202,22 @@ func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
 	movie.Rating = rating
 	movie.MovieGenre = payload.MovieGenre
 
+	if len(payload.ID) > 0 {
+		editMovieID, err := strconv.Atoi(payload.ID)
+		if err != nil {
+			app.errorJSON(w, errors.New("invalid movie id"))
+			return
+		}
+
+		m, err := app.models.DB.Get(editMovieID)
+		if err != nil {
+			app.errorJSON(w, errors.New("invalid movie id"))
+			return
+		}
+
+		movie.ID = m.ID
+	}
+
 	movieID, moviesGenres, err := app.models.DB.InsertMovie(&movie)
 	if err != nil {
 		app.errorJSON(w, err)

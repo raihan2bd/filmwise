@@ -279,9 +279,15 @@ func (m *DBModel) InsertMovie(movie *Movie) (int, map[int]string, error) {
 	}
 
 	for key := range movieGenres {
-		stmt = `insert into movies_genres ( genre_id, movie_id, created_at, updated_at)
-						values($1, $2, $3, $4)`
-		_, err = m.DB.ExecContext(ctx, stmt, key, movieID, time.Now(), time.Now())
+		existMovieGenreID := 0
+		q := `select id from movies_genres where genre_id = $1 and movie_id = $2`
+		_ = m.DB.QueryRowContext(ctx, q, key, movieID).Scan(&existMovieGenreID)
+
+		if existMovieGenreID == 0 {
+			stmt = `insert into movies_genres ( genre_id, movie_id, created_at, updated_at)
+							values($1, $2, $3, $4)`
+			_, err = m.DB.ExecContext(ctx, stmt, key, movieID, time.Now(), time.Now())
+		}
 		if err != nil {
 			return movieID, movieGenres, err
 		}
