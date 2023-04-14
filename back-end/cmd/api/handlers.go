@@ -226,6 +226,56 @@ func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) UpdateMovie(w http.ResponseWriter, r *http.Request) {
+func (app *application) getOneMovie(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
 
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.errorJSON(w, errors.New("invalid id parameter"))
+		return
+	}
+
+	movie, err := app.models.DB.Get(id)
+	if err != nil {
+		app.errorJSON(w, errors.New("failed to fetch the movie"))
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, movie, "movie")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+}
+
+func (app *application) deleteMovie(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.errorJSON(w, errors.New("invalid id"))
+		return
+	}
+
+	err = app.models.DB.DeleteMovie(id)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	var resp struct {
+		Error   bool   `json:"error"`
+		ID      int    `json:"id"`
+		Message string `json:"message"`
+	}
+
+	resp.Error = false
+	resp.ID = id
+	resp.Message = "movie is successfully deleted!"
+
+	err = app.writeJSON(w, http.StatusOK, resp)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
 }
