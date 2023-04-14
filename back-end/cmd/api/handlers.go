@@ -1,11 +1,33 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/raihan2bd/filmwise/models"
+	"github.com/raihan2bd/filmwise/validator"
 )
+
+// constants for default values
+const (
+	defaultPage    = 1
+	defaultPerPage = 3
+)
+
+type MoviePayload struct {
+	ID          string         `json:"id"`
+	Title       string         `json:"title"`
+	Description string         `json:"description"`
+	Year        string         `json:"year"`
+	ReleaseDate string         `json:"release_date"`
+	Runtime     string         `json:"runtime"`
+	Rating      string         `json:"rating"`
+	MovieGenre  map[int]string `json:"genres"`
+}
 
 func (app *application) GetStatus(w http.ResponseWriter, r *http.Request) {
 	currentStatus := AppStatus{
@@ -19,8 +41,54 @@ func (app *application) GetStatus(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) getAllMovies(w http.ResponseWriter, r *http.Request) {
-	movies, err := app.models.DB.GetAllMovies()
+// get all movies by filter
+func (app *application) getAllMoviesByFilter(w http.ResponseWriter, r *http.Request) {
+	// get query params from request
+	queryValues := r.URL.Query()
+
+	// find by search query
+	searchInput := strings.ToLower(queryValues.Get("s"))
+	var filter models.MovieFilter
+	filter.FindByName = searchInput
+
+	page := defaultPage
+	perPage := defaultPerPage
+
+	// set up current page
+	if queryValues.Get("page") != "" {
+		p, err := strconv.Atoi(queryValues.Get("page"))
+		if err != nil {
+			app.errorJSON(w, errors.New("current page should be a number"))
+			return
+		}
+		page = p
+	}
+
+	// set up per page limit
+	if queryValues.Get("limit") != "" {
+		pp, err := strconv.Atoi(queryValues.Get("limit"))
+		if err != nil {
+			app.errorJSON(w, errors.New("per page limit should be a number"))
+			return
+		}
+		perPage = pp
+	}
+
+	gID, err := strconv.Atoi(queryValues.Get("genre"))
+	if err == nil {
+		filter.FilterByGenre = gID
+	}
+
+	if queryValues.Get("year") != "" {
+		year, err := strconv.Atoi(queryValues.Get("year"))
+		if err == nil {
+			filter.FilterByYear = year
+		}
+	}
+
+	filter.OrderBy = queryValues.Get("order_by")
+
+	movies, err := app.models.DB.GetAllMoviesByFilter(page, perPage, &filter)
 	if err != nil {
 		app.errorJSON(w, err)
 		return
@@ -31,7 +99,6 @@ func (app *application) getAllMovies(w http.ResponseWriter, r *http.Request) {
 		app.errorJSON(w, err)
 		return
 	}
-
 }
 
 // Get all movies by genre
@@ -66,6 +133,163 @@ func (app *application) getAllGenres(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = app.writeJSON(w, http.StatusOK, genres, "genres")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+}
+
+// AddNewMovie will insert a new movie
+func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
+	var payload MoviePayload
+
+	// read json from the body
+	err := app.readJSON(w, r, &payload)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	validator := validator.New()
+	validator.IsLength(payload.Title, "title", 3, 255)
+	validator.IsLength(payload.Description, "description", 20, 500)
+	validator.Required(payload.Year, "year", "year is required")
+	validator.Required(payload.ReleaseDate, "release_date", "release_date is required")
+
+	year, err := strconv.Atoi(payload.Year)
+	if err != nil {
+		validator.AddError("year", "invalid year!")
+	}
+
+	releaseDate, err := time.Parse("2006-01-02", payload.ReleaseDate)
+	if err != nil {
+		validator.AddError("release_date", "invalid release_date!")
+	}
+
+	runtime, err := strconv.Atoi(payload.Runtime)
+	if err != nil {
+		validator.AddError("runtime", "invalid runtime!")
+	}
+
+	rating, err := strconv.ParseFloat(payload.Rating, 64)
+	if err != nil {
+		validator.AddError("rating", "invalid rating!")
+	}
+
+	if len(payload.MovieGenre) <= 0 {
+		validator.AddError("genres", "movie genre is required")
+	}
+
+	if len(payload.MovieGenre) > 5 {
+		validator.AddError("genres", "maximum 5 genres are allowed")
+	}
+
+	if !validator.Valid() {
+		err := app.writeJSON(w, http.StatusBadRequest, validator)
+		if err != nil {
+			app.badRequest(w, r, err)
+			return
+		}
+		return
+	}
+
+	var movie models.Movie
+	movie.Title = strings.Trim(payload.Title, "")
+	movie.Description = strings.Trim(payload.Description, "")
+	movie.Year = year
+	movie.ReleaseDate = releaseDate
+	movie.Runtime = runtime
+	movie.Rating = rating
+	movie.MovieGenre = payload.MovieGenre
+
+	if len(payload.ID) > 0 {
+		editMovieID, err := strconv.Atoi(payload.ID)
+		if err != nil {
+			app.errorJSON(w, errors.New("invalid movie id"))
+			return
+		}
+
+		m, err := app.models.DB.Get(editMovieID)
+		if err != nil {
+			app.errorJSON(w, errors.New("invalid movie id"))
+			return
+		}
+
+		movie.ID = m.ID
+	}
+
+	movieID, moviesGenres, err := app.models.DB.InsertMovie(&movie)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	var resp struct {
+		Error        bool           `json:"error"`
+		ID           int            `json:"id"`
+		MoviesGenres map[int]string `json:"movies_genres"`
+		Message      string         `json:"message"`
+	}
+
+	resp.Error = false
+	resp.ID = movieID
+	resp.MoviesGenres = moviesGenres
+	resp.Message = "Movie is inserted successfully!"
+
+	err = app.writeJSON(w, http.StatusOK, resp)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+}
+
+func (app *application) getOneMovie(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.errorJSON(w, errors.New("invalid id parameter"))
+		return
+	}
+
+	movie, err := app.models.DB.Get(id)
+	if err != nil {
+		app.errorJSON(w, errors.New("failed to fetch the movie"))
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, movie, "movie")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+}
+
+func (app *application) deleteMovie(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.errorJSON(w, errors.New("invalid id"))
+		return
+	}
+
+	err = app.models.DB.DeleteMovie(id)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	var resp struct {
+		Error   bool   `json:"error"`
+		ID      int    `json:"id"`
+		Message string `json:"message"`
+	}
+
+	resp.Error = false
+	resp.ID = id
+	resp.Message = "movie is successfully deleted!"
+
+	err = app.writeJSON(w, http.StatusOK, resp)
 	if err != nil {
 		app.errorJSON(w, err)
 		return
