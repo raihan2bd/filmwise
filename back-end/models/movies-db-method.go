@@ -297,14 +297,6 @@ func (m *DBModel) UpdateMovie(movie *Movie) (int, map[int]string, error) {
 	movieID := 0
 	var movieGenres = make(map[int]string)
 
-	// // return if movie title is already exist
-	// q := `select id from movies where title = $1`
-	// _ = m.DB.QueryRowContext(ctx, q, movie.Title).Scan(&movieID)
-	// fmt.Println(movieID)
-	// if movieID > 0 {
-	// 	return movieID, movieGenres, errors.New("the movie is already exist")
-	// }
-
 	// verify genres
 	for _, val := range movie.MovieGenre {
 		genreID := 0
