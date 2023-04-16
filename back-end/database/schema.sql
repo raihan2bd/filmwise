@@ -38,3 +38,15 @@ CREATE TABLE movies_genres (
 -- Alter table movies rating column type int to float
 alter table movies
   alter column rating type float4;
+
+-- Delete movie_id foreign key
+ALTER TABLE movies_genres DROP CONSTRAINT fk_movie_id;
+
+-- Add movie foreign key with on delete cascade
+ALTER TABLE movies_genres ADD CONSTRAINT fk_movie_id FOREIGN KEY (movie_id) REFERENCES movies (id) ON DELETE CASCADE;
+
+-- Delete genre_id foreign key
+ALTER TABLE movies_genres DROP CONSTRAINT fk_genre_id;
+
+-- Add movie foreign key with on delete cascade
+ALTER TABLE movies_genres ADD CONSTRAINT fk_genre_id FOREIGN KEY (genre_id) REFERENCES genres (id) ON DELETE CASCADE;
