@@ -236,7 +236,7 @@ func (m *DBModel) InsertMovie(movie *Movie) (int, map[int]string, error) {
 	_ = m.DB.QueryRowContext(ctx, q, movie.Title).Scan(&movieID)
 	fmt.Println(movieID)
 	if movieID > 0 {
-		return movieID, movieGenres, errors.New("the movie was already exist")
+		return movieID, movieGenres, errors.New("the movie is already exist")
 	}
 
 	// verify genres
@@ -279,17 +279,85 @@ func (m *DBModel) InsertMovie(movie *Movie) (int, map[int]string, error) {
 	}
 
 	for key := range movieGenres {
-		existMovieGenreID := 0
-		q := `select id from movies_genres where genre_id = $1 and movie_id = $2`
-		_ = m.DB.QueryRowContext(ctx, q, key, movieID).Scan(&existMovieGenreID)
-
-		if existMovieGenreID == 0 {
-			stmt = `insert into movies_genres ( genre_id, movie_id, created_at, updated_at)
-							values($1, $2, $3, $4)`
-			_, err = m.DB.ExecContext(ctx, stmt, key, movieID, time.Now(), time.Now())
-		}
+		stmt = `insert into movies_genres ( genre_id, movie_id, created_at, updated_at)
+						values($1, $2, $3, $4)`
+		_, err = m.DB.ExecContext(ctx, stmt, key, movieID, time.Now(), time.Now())
 		if err != nil {
 			return movieID, movieGenres, err
+		}
+	}
+	return movieID, movieGenres, nil
+}
+
+// UpdateMovie is help to update a movie from the database
+func (m *DBModel) UpdateMovie(movie *Movie) (int, map[int]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	movieID := 0
+	var movieGenres = make(map[int]string)
+
+	// // return if movie title is already exist
+	// q := `select id from movies where title = $1`
+	// _ = m.DB.QueryRowContext(ctx, q, movie.Title).Scan(&movieID)
+	// fmt.Println(movieID)
+	// if movieID > 0 {
+	// 	return movieID, movieGenres, errors.New("the movie is already exist")
+	// }
+
+	// verify genres
+	for _, val := range movie.MovieGenre {
+		genreID := 0
+		query := `select id from genres where genre_name = $1`
+		err := m.DB.QueryRowContext(ctx, query, val).Scan(&genreID)
+		if err != nil {
+			return movieID, movieGenres, errors.New("invalid genre name")
+		}
+		fmt.Println(genreID)
+		if genreID > 0 {
+			if _, exists := movieGenres[genreID]; !exists {
+				movieGenres[genreID] = val
+			}
+		}
+	}
+
+	if len(movieGenres) <= 0 {
+		movieGenres[10] = "Unknown"
+	}
+
+	stmt := `update movies set title = $1, description = $2, year = $3, release_date = $4, 
+	runtime = $5, rating = $6,
+	updated_at = $7 where id = $8
+	RETURNING id`
+
+	err := m.DB.QueryRowContext(ctx, stmt,
+		movie.Title,
+		movie.Description,
+		movie.Year,
+		movie.ReleaseDate,
+		movie.Runtime,
+		movie.Rating,
+		time.Now(),
+		movie.ID,
+	).Scan(&movieID)
+	if err != nil {
+		log.Println(err)
+		return movieID, movieGenres, errors.New("invalid movie data! failed to update the movie")
+	}
+
+	q := `delete from movies_genres where movie_id = $1`
+
+	_, err = m.DB.ExecContext(ctx, q, movieID)
+	if err != nil {
+		return movieID, movieGenres, errors.New("something went wrong")
+	}
+
+	for key := range movieGenres {
+		stmt = `insert into movies_genres ( genre_id, movie_id, created_at, updated_at)
+						values($1, $2, $3, $4)`
+		_, err = m.DB.ExecContext(ctx, stmt, key, movieID, time.Now(), time.Now())
+		if err != nil {
+			return movieID, movieGenres, errors.New("failed to save the movie genres")
 		}
 	}
 	return movieID, movieGenres, nil
@@ -300,7 +368,7 @@ func (m *DBModel) Get(id int) (*Movie, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `select id, title, description, year, release_date, rating, runtime, mpaa_rating,
+	query := `select id, title, description, year, release_date, rating, runtime,
 				created_at, updated_at from movies where id = $1
 	`
 

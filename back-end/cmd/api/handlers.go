@@ -205,12 +205,14 @@ func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
 	if len(payload.ID) > 0 {
 		editMovieID, err := strconv.Atoi(payload.ID)
 		if err != nil {
+			app.logger.Println(err)
 			app.errorJSON(w, errors.New("invalid movie id"))
 			return
 		}
 
 		m, err := app.models.DB.Get(editMovieID)
 		if err != nil {
+			app.logger.Println(err)
 			app.errorJSON(w, errors.New("invalid movie id"))
 			return
 		}
@@ -218,7 +220,17 @@ func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
 		movie.ID = m.ID
 	}
 
-	movieID, moviesGenres, err := app.models.DB.InsertMovie(&movie)
+	var movieID int
+	var moviesGenres map[int]string
+	respMsg := "Movie is inserted successfully!"
+
+	if movie.ID > 0 {
+		respMsg = "Movie is successfully updated"
+		movieID, moviesGenres, err = app.models.DB.UpdateMovie(&movie)
+	} else {
+		movieID, moviesGenres, err = app.models.DB.InsertMovie(&movie)
+	}
+
 	if err != nil {
 		app.errorJSON(w, err)
 		return
@@ -234,7 +246,7 @@ func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
 	resp.Error = false
 	resp.ID = movieID
 	resp.MoviesGenres = moviesGenres
-	resp.Message = "Movie is inserted successfully!"
+	resp.Message = respMsg
 
 	err = app.writeJSON(w, http.StatusOK, resp)
 	if err != nil {
