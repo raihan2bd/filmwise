@@ -307,3 +307,132 @@ func (app *application) deleteMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// comment payload
+type commentPayload struct {
+	Comment   string `json:"comment"`
+	MovieID   string `json:"movie_id"`
+	CommentID string `json:"comment_id"`
+}
+
+// Add or Update a comment
+func (app *application) addOrUpdateComment(w http.ResponseWriter, r *http.Request) {
+	var payload commentPayload
+
+	// read json from the body
+	err := app.readJSON(w, r, &payload)
+	if err != nil {
+		app.badRequest(w, r, errors.New("invalid json"))
+		return
+	}
+
+	id := 0
+
+	if payload.CommentID != "" {
+		id, err = strconv.Atoi(payload.CommentID)
+		if err != nil {
+			app.badRequest(w, r, errors.New("invalid comment id"))
+			return
+		}
+		_, err = app.models.DB.CheckComment(id)
+		if err != nil {
+			app.badRequest(w, r, errors.New("invalid comment id"))
+			return
+		}
+	}
+
+	validator := validator.New()
+	validator.IsLength(payload.Comment, "comment", 10, 500)
+	validator.Required(payload.MovieID, "movie_id", "movie_id is required")
+
+	movieID, err := strconv.Atoi(payload.MovieID)
+	if err != nil {
+		validator.AddError("movie_id", "invalid movie_id!")
+	}
+
+	if !validator.Valid() {
+		err := app.writeJSON(w, http.StatusBadRequest, validator)
+		if err != nil {
+			app.badRequest(w, r, err)
+			return
+		}
+		return
+	}
+
+	var comment models.Comment
+	comment.Comment = strings.Trim(payload.Comment, "")
+	comment.MovieID = movieID
+	comment.UserID = 1
+	comment.CreatedAt = time.Now()
+	comment.UpdatedAt = time.Now()
+
+	var resp struct {
+		OK      bool   `json:"ok"`
+		ID      int    `json:"id"`
+		Message string `json:"message"`
+	}
+
+	var commentID int
+	respMsg := "Comment is inserted successfully!"
+	if comment.ID > 0 {
+		commentID, err = app.models.DB.UpdateComment(&comment)
+		respMsg = "Comment is updated successfully!"
+	} else {
+		commentID, err = app.models.DB.InsertComment(&comment)
+	}
+
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	resp.OK = false
+	resp.ID = commentID
+	resp.Message = respMsg
+
+	err = app.writeJSON(w, http.StatusOK, resp)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+}
+
+// Delete a comment
+func (app *application) deleteComment(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.errorJSON(w, errors.New("invalid id"))
+		return
+	}
+
+	// check if the comment exists
+	_, err = app.models.DB.GetComment(id)
+	if err != nil {
+		app.errorJSON(w, errors.New("invalid comment id"))
+		return
+	}
+
+	// user authentication will be added later
+	err = app.models.DB.DeleteComment(id)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	var resp struct {
+		OK      bool   `json:"ok"`
+		ID      int    `json:"id"`
+		Message string `json:"message"`
+	}
+
+	resp.OK = false
+	resp.ID = id
+	resp.Message = "comment is successfully deleted!"
+
+	err = app.writeJSON(w, http.StatusOK, resp)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+}

@@ -429,3 +429,105 @@ func (m *DBModel) DeleteMovie(id int) error {
 
 	return nil
 }
+
+// CheckComment returns comment_id and error, if any
+func (m *DBModel) CheckComment(commentID int) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var id int
+	query := `select id from comments where id = $1`
+
+	err := m.DB.QueryRowContext(ctx, query, commentID).Scan(&id)
+	if err != nil {
+		return id, errors.New("invalid comment id")
+	}
+
+	return id, nil
+}
+
+// Get Comment returns one comment and error, if any
+func (m *DBModel) GetComment(id int) (*Comment, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `select id, movie_id, user_id, comment, created_at, updated_at from comments where id = $1`
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+
+	var comment Comment
+
+	err := row.Scan(
+		&comment.ID,
+		&comment.MovieID,
+		&comment.UserID,
+		&comment.Comment,
+		&comment.CreatedAt,
+		&comment.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &comment, nil
+}
+
+// InsertComment is help to add a comment to the database
+func (m *DBModel) InsertComment(comment *Comment) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var commentID int
+	stmt := `insert into comments (movie_id, user_id, comment, created_at, updated_at)
+						values($1, $2, $3, $4, $5)
+						RETURNING id`
+
+	err := m.DB.QueryRowContext(ctx, stmt,
+		comment.MovieID,
+		comment.UserID,
+		comment.Comment,
+		time.Now(),
+		time.Now(),
+	).Scan(&commentID)
+	if err != nil {
+		return commentID, errors.New("failed to add the comment")
+	}
+
+	return commentID, nil
+}
+
+// UpdateComment is help to edit a comment
+func (m *DBModel) UpdateComment(comment *Comment) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var commentID int
+	stmt := `update comments set comment = $1, updated_at = $2 where id = $3
+	RETURNING id`
+
+	err := m.DB.QueryRowContext(ctx, stmt,
+		comment.Comment,
+		time.Now(),
+		comment.ID,
+	).Scan(&commentID)
+	if err != nil {
+		return commentID, errors.New("failed to update the comment")
+	}
+
+	return commentID, nil
+}
+
+// DeleteComment is help to delete a comment
+func (m *DBModel) DeleteComment(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := "delete from comments where id = $1"
+
+	_, err := m.DB.ExecContext(ctx, stmt, id)
+	if err != nil {
+		return errors.New("failed to delete the comment")
+	}
+
+	return nil
+}

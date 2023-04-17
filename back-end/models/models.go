@@ -67,3 +67,22 @@ type QueryParam struct {
 	Key   string
 	Value interface{}
 }
+
+// model for comment
+type Comment struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	MovieID   int       `json:"movie_id"`
+	Comment   string    `json:"comment"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"commented_at"`
+}
+
+// model for favorite
+type Favorite struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	MovieID   int       `json:"movie_id"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
+}
