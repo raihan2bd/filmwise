@@ -531,3 +531,41 @@ func (m *DBModel) DeleteComment(id int) error {
 
 	return nil
 }
+
+// AddFavorite is help to add a favorite movie to the database
+func (m *DBModel) AddFavorite(favorite *Favorite) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var favoriteID int
+	stmt := `insert into favorites (user_id, movie_id, created_at, updated_at)
+						values($1, $2, $3, $4)
+						RETURNING id`
+
+	err := m.DB.QueryRowContext(ctx, stmt,
+		favorite.UserID,
+		favorite.MovieID,
+		time.Now(),
+		time.Now(),
+	).Scan(&favoriteID)
+	if err != nil {
+		return favoriteID, errors.New("failed to add the favorite")
+	}
+
+	return favoriteID, nil
+}
+
+// DeleteComment is help to delete a comment
+func (m *DBModel) RemoveFavorite(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := "delete from favorites where id = $1"
+
+	_, err := m.DB.ExecContext(ctx, stmt, id)
+	if err != nil {
+		return errors.New("failed to remove favorite")
+	}
+
+	return nil
+}

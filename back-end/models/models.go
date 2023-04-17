@@ -84,5 +84,5 @@ type Favorite struct {
 	UserID    int       `json:"user_id"`
 	MovieID   int       `json:"movie_id"`
 	CreatedAt time.Time `json:"-"`
-	UpdatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"fav_at"`
 }
