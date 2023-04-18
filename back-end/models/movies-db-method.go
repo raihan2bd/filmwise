@@ -79,6 +79,93 @@ func (m *DBModel) GetAllMovies(genre ...int) ([]*Movie, error) {
 	return movies, nil
 }
 
+// CheckGenre checks if genre exists
+func (m *DBModel) CheckGenre(genreID int) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `select id from genres where id = $1`
+
+	var id int
+	err := m.DB.QueryRowContext(ctx, query, genreID).Scan(&id)
+	if err != nil {
+		return false, err
+	}
+
+	if id <= 0 {
+		return false, errors.New("Genre not found")
+	}
+
+	return true, nil
+}
+
+// InsertGenre inserts a new genre into the database
+func (m *DBModel) InsertGenre(genreName string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `insert into genres (genre_name, created_at, updated_at) values ($1, $2, $3) returning id`
+
+	var id int
+	err := m.DB.QueryRowContext(ctx, query, genreName, time.Now(), time.Now()).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+// UpdateGenre updates a genre in the database
+func (m *DBModel) UpdateGenre(id int, genreName string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `update genres set genre_name = $1, updated_at = $2 where id = $3`
+
+	_, err := m.DB.ExecContext(ctx, query, genreName, time.Now(), id)
+	if err != nil {
+		return id, err
+	}
+
+	return id, nil
+}
+
+// DeleteGenre deletes a genre from the database
+func (m *DBModel) DeleteGenre(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `delete from genres where id = $1`
+
+	_, err := m.DB.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GenreByID returns a single genre based on the ID provided
+func (m *DBModel) GenreByID(id int) (Genre, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `select id, genre_name, created_at, updated_at from genres where id = $1`
+
+	var g Genre
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+		&g.ID,
+		&g.GenreName,
+		&g.CreatedAt,
+		&g.UpdatedAt,
+	)
+	if err != nil {
+		return g, err
+	}
+
+	return g, nil
+}
+
 // Get all genres from db
 func (m *DBModel) GenresAll() ([]*Genre, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

@@ -308,6 +308,119 @@ func (app *application) deleteMovie(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Add or Update genre
+func (app *application) addOrUpdateGenre(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		ID        string `json:"genre_id"`
+		GenreName string `json:"genre_name"`
+	}
+
+	// read json from the body
+	err := app.readJSON(w, r, &payload)
+	if err != nil {
+		app.badRequest(w, r, errors.New("invalid json"))
+		return
+	}
+
+	id := 0
+
+	if payload.ID != "" {
+		id, err = strconv.Atoi(payload.ID)
+		if err != nil {
+			app.badRequest(w, r, errors.New("invalid genre id"))
+			return
+		}
+		_, err = app.models.DB.CheckGenre(id)
+		if err != nil {
+			app.badRequest(w, r, errors.New("invalid genre id"))
+			return
+		}
+	}
+
+	// validate genre name
+	validator := validator.New()
+	validator.IsLength(payload.GenreName, "genre_name", 3, 50)
+
+	// if len(payload.GenreName) < 3 || len(payload.GenreName) > 50 {
+	// 	app.badRequest(w, r, errors.New("genre name must be between 3 and 50 characters"))
+	// 	return
+	// }
+
+	if !validator.Valid() {
+		err := app.writeJSON(w, http.StatusBadRequest, validator)
+		if err != nil {
+			app.badRequest(w, r, err)
+			return
+		}
+		return
+	}
+
+	var genreID int
+	respMsg := "Genre is inserted successfully!"
+
+	if id > 0 {
+		genreID, err = app.models.DB.UpdateGenre(id, payload.GenreName)
+		respMsg = "Genre is successfully updated"
+	} else {
+		genreID, err = app.models.DB.InsertGenre(payload.GenreName)
+	}
+
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	var resp struct {
+		OK      bool   `json:"ok"`
+		Message string `json:"message"`
+		ID      int    `json:"id"`
+	}
+
+	resp.OK = true
+	resp.Message = respMsg
+	resp.ID = genreID
+
+	err = app.writeJSON(w, http.StatusOK, resp)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+
+}
+
+// deleteGenre deletes a genre
+func (app *application) deleteGenre(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.errorJSON(w, errors.New("invalid id"))
+		return
+	}
+
+	err = app.models.DB.DeleteGenre(id)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	var resp struct {
+		OK      bool   `json:"ok"`
+		ID      int    `json:"id"`
+		Message string `json:"message"`
+	}
+
+	resp.OK = true
+	resp.ID = id
+	resp.Message = "genre is successfully deleted!"
+
+	err = app.writeJSON(w, http.StatusOK, resp)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+}
+
 // comment payload
 type commentPayload struct {
 	Comment   string `json:"comment"`

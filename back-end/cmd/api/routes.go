@@ -28,8 +28,8 @@ func (app *application) routes() http.Handler {
 
 	// private routes for admin
 	// router.HandlerFunc(http.MethodPost, "/v1/images/upload", app.uploadImage)
-	router.HandlerFunc(http.MethodPost, "/v1/admin/genre/add", app.addGenre)
-	router.HandlerFunc(http.MethodPut, "/v1/admin/genre/edit", app.editGenre)
+	router.HandlerFunc(http.MethodPost, "/v1/admin/genre/add", app.addOrUpdateGenre)
+	router.HandlerFunc(http.MethodPut, "/v1/admin/genre/edit", app.addOrUpdateGenre)
 	router.HandlerFunc(http.MethodGet, "/v1/admin/genre/delete/:id", app.deleteGenre)
 	router.HandlerFunc(http.MethodPost, "/v1/admin/movie/add", app.AddNewMovie)
 	router.HandlerFunc(http.MethodPut, "/v1/admin/movie/edit", app.AddNewMovie)
