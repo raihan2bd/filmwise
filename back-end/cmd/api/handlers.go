@@ -424,7 +424,6 @@ func (app *application) deleteGenre(w http.ResponseWriter, r *http.Request) {
 // Add or Update Rating
 func (app *application) addOrUpdateRating(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		ID      string `json:"id"`
 		MovieID string `json:"movie_id"`
 		Rating  string `json:"rating"`
 	}
@@ -434,23 +433,6 @@ func (app *application) addOrUpdateRating(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		app.errorJSON(w, errors.New("invalid json request"))
 		return
-	}
-
-	ratingID := 0
-
-	if payload.ID != "" {
-		ratingID, err = strconv.Atoi(payload.ID)
-
-		if err != nil {
-			app.errorJSON(w, errors.New("invalid rating id"))
-			return
-		}
-
-		err = app.models.DB.CheckRating(ratingID)
-		if err != nil {
-			app.errorJSON(w, errors.New("invalid rating id"))
-			return
-		}
 	}
 
 	validator := validator.New()
@@ -474,7 +456,7 @@ func (app *application) addOrUpdateRating(w http.ResponseWriter, r *http.Request
 	}
 
 	if movieRating < 1.0 || movieRating > 10.0 {
-		validator.AddError("rating", "movie rating shoulbe between 1.0 to 10.0")
+		validator.AddError("rating", "movie rating should be between 1.0 to 10.0")
 	}
 
 	if !validator.Valid() {
@@ -488,6 +470,10 @@ func (app *application) addOrUpdateRating(w http.ResponseWriter, r *http.Request
 
 	// user id
 	userID := 1
+
+	// check if rating is already exists
+	ratingID := 0
+	ratingID, _ = app.models.DB.CheckRating(movieID, userID)
 
 	rating := models.Rating{
 		ID:        ratingID,

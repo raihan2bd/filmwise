@@ -146,24 +146,20 @@ func (m *DBModel) DeleteGenre(id int) error {
 }
 
 // Check rating
-func (m *DBModel) CheckRating(id int) error {
+func (m *DBModel) CheckRating(movieID, userID int) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `select id from ratings where id = $1`
+	query := `select id from ratings where movie_id = $1 and user_id = $2`
 
 	ratingID := 0
 
-	err := m.DB.QueryRowContext(ctx, query, id).Scan(&ratingID)
+	err := m.DB.QueryRowContext(ctx, query, movieID, userID).Scan(&ratingID)
 	if err != nil {
-		return errors.New("Rating not found")
+		return 0, errors.New("Rating not found")
 	}
 
-	if ratingID <= 0 {
-		return errors.New("Rating not found")
-	}
-
-	return nil
+	return ratingID, nil
 }
 
 // InsertRating inserts a new rating into the database
