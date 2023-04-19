@@ -166,6 +166,38 @@ func (m *DBModel) CheckRating(id int) error {
 	return nil
 }
 
+// InsertRating inserts a new rating into the database
+func (m *DBModel) InsertRating(rating *Rating) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `insert into ratings (movie_id, user_id, rating, created_at, updated_at) values ($1, $2, $3, $4, $5) returning id`
+
+	var id int
+	err := m.DB.QueryRowContext(ctx, query, rating.MovieID, rating.UserID, rating.Rating, rating.CreatedAt, rating.UpdatedAt).Scan(&id)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+// UpdateRating updates a rating in the database
+func (m *DBModel) UpdateRating(rating *Rating) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `update ratings set rating = $1, updated_at = $2 where id = $3`
+
+	_, err := m.DB.ExecContext(ctx, query, rating.Rating, rating.UpdatedAt, rating.ID)
+	if err != nil {
+		return rating.ID, errors.New("Rating not found")
+	}
+
+	return rating.ID, nil
+}
+
 // GenreByID returns a single genre based on the ID provided
 func (m *DBModel) GenreByID(id int) (Genre, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
