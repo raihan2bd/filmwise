@@ -421,6 +421,114 @@ func (app *application) deleteGenre(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Add or Update Rating
+func (app *application) addOrUpdateRating(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		ID      string `json:"id"`
+		MovieID string `json:"movie_id"`
+		Rating  string `json:"rating"`
+	}
+
+	// read json from the body
+	err := app.readJSON(w, r, &payload)
+	if err != nil {
+		app.errorJSON(w, errors.New("invalid json request"))
+		return
+	}
+
+	ratingID := 0
+
+	if payload.ID != "" {
+		ratingID, err = strconv.Atoi(payload.ID)
+
+		if err != nil {
+			app.errorJSON(w, errors.New("invalid rating id"))
+			return
+		}
+
+		err = app.models.DB.CheckRating(ratingID)
+		if err != nil {
+			app.errorJSON(w, errors.New("invalid rating id"))
+			return
+		}
+	}
+
+	validator := validator.New()
+	validator.Required(payload.MovieID, "movie_id", "movie id is required")
+	validator.Required(payload.Rating, "rating", "rating is required")
+	movieID, err := strconv.Atoi(payload.MovieID)
+	if err != nil {
+		validator.AddError("movie_id", "invalid movie_id")
+	}
+
+	if movieID > 0 {
+		_, err = app.models.DB.Get(movieID)
+		if err != nil {
+			validator.AddError("movie_id", "invalid movie id")
+		}
+	}
+
+	movieRating, err := strconv.ParseFloat(payload.Rating, 32)
+	if err != nil {
+		validator.AddError("rating", "invalid rating")
+	}
+
+	if movieRating < 1.0 || movieRating > 10.0 {
+		validator.AddError("rating", "movie rating shoulbe between 1.0 to 10.0")
+	}
+
+	if !validator.Valid() {
+		err := app.writeJSON(w, http.StatusBadRequest, validator)
+		if err != nil {
+			app.badRequest(w, r, err)
+			return
+		}
+		return
+	}
+
+	// user id
+	userID := 1
+
+	rating := models.Rating{
+		ID:        ratingID,
+		MovieID:   movieID,
+		UserID:    userID,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	var id int
+	respMsg := "Rating is added successfully!"
+
+	if ratingID > 0 {
+		id, err = app.models.DB.UpdateRating(&rating)
+		respMsg = "Rating is updated successfully!"
+	} else {
+		id, err = app.models.DB.InsertRating(&rating)
+	}
+
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	var resp struct {
+		OK      bool   `json:"ok"`
+		ID      int    `json:"id"`
+		Message string `json:"message"`
+	}
+
+	resp.OK = true
+	resp.ID = id
+	resp.Message = respMsg
+
+	err = app.writeJSON(w, http.StatusOK, resp)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+
+}
+
 // comment payload
 type commentPayload struct {
 	Comment   string `json:"comment"`
