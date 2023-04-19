@@ -68,6 +68,16 @@ type QueryParam struct {
 	Value interface{}
 }
 
+// model for rating
+type Rating struct {
+	ID        int       `json:"id"`
+	MovieID   int       `json:"movie_id"`
+	UserID    int       `json:"user_id"`
+	Rating    float32   `json:"rating"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
+}
+
 // model for comment
 type Comment struct {
 	ID        int       `json:"id"`
