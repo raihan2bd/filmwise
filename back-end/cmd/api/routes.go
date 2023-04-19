@@ -16,6 +16,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/movie/:id", app.getOneMovie)
 
 	// private routes for user
+	router.HandlerFunc(http.MethodPost, "/v1/movie/rating/add", app.addOrUpdateRating)
+	router.HandlerFunc(http.MethodPost, "/v1/movie/rating/update", app.addOrUpdateRating)
 
 	// routes for comments
 	router.HandlerFunc(http.MethodPost, "/v1/movie/comments/add", app.addOrUpdateComment)
