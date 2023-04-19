@@ -145,6 +145,27 @@ func (m *DBModel) DeleteGenre(id int) error {
 	return nil
 }
 
+// Check rating
+func (m *DBModel) CheckRating(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `select id from ratings where id = $1`
+
+	ratingID := 0
+
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(&ratingID)
+	if err != nil {
+		return errors.New("Rating not found")
+	}
+
+	if ratingID <= 0 {
+		return errors.New("Rating not found")
+	}
+
+	return nil
+}
+
 // GenreByID returns a single genre based on the ID provided
 func (m *DBModel) GenreByID(id int) (Genre, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
