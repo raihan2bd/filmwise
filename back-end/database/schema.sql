@@ -112,3 +112,6 @@ CREATE TABLE comments (
       REFERENCES users(id)
       ON DELETE CASCADE
 );
+
+-- Alter table movies drop column rating
+ALTER TABLE movies DROP COLUMN rating;
