@@ -50,3 +50,12 @@ ALTER TABLE movies_genres DROP CONSTRAINT fk_genre_id;
 
 -- Add movie foreign key with on delete cascade
 ALTER TABLE movies_genres ADD CONSTRAINT fk_genre_id FOREIGN KEY (genre_id) REFERENCES genres (id) ON DELETE CASCADE;
+
+-- Create users table inside the database
+Create TABLE users (
+  id serial not null primary key,
+  name varchar(100) not null,
+  email varchar(255) not null unique,
+  password varchar(60) not null,
+  user_type varchar(55) not null default 'user'
+);
