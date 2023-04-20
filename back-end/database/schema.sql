@@ -94,3 +94,21 @@ CREATE TABLE favorites (
       REFERENCES users(id)
       ON DELETE CASCADE
 );
+
+-- Create comments table inside the database
+CREATE TABLE comments (
+    id serial not null primary key,
+    movie_id integer not null,
+    user_id integer not null,
+    comment text not null,
+    created_at timestamp,
+    updated_at timestamp,
+    CONSTRAINT fk_movie_id
+      FOREIGN KEY(movie_id)
+      REFERENCES movies(id)
+      ON DELETE CASCADE,
+    CONSTRAINT fk_user_id
+      FOREIGN KEY(user_id)
+      REFERENCES users(id)
+      ON DELETE CASCADE
+);
