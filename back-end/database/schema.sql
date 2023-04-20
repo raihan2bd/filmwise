@@ -77,3 +77,20 @@ CREATE TABLE ratings (
       REFERENCES users(id)
       ON DELETE CASCADE
 );
+
+-- Create favorites table inside the database
+CREATE TABLE favorites (
+    id serial not null primary key,
+    movie_id integer not null,
+    user_id integer not null,
+    created_at timestamp,
+    updated_at timestamp,
+    CONSTRAINT fk_movie_id
+      FOREIGN KEY(movie_id)
+      REFERENCES movies(id)
+      ON DELETE CASCADE,
+    CONSTRAINT fk_user_id
+      FOREIGN KEY(user_id)
+      REFERENCES users(id)
+      ON DELETE CASCADE
+);
