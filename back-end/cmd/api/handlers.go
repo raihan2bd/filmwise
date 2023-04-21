@@ -41,6 +41,22 @@ func (app *application) GetStatus(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Get all movies
+func (app *application) getAllMovies(w http.ResponseWriter, r *http.Request) {
+	// get all movies from the database
+	movies, err := app.models.DB.GetAllMovies("the")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, movies, "movies")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+}
+
 // get all movies by filter
 func (app *application) getAllMoviesByFilter(w http.ResponseWriter, r *http.Request) {
 	// get query params from request
@@ -102,27 +118,27 @@ func (app *application) getAllMoviesByFilter(w http.ResponseWriter, r *http.Requ
 }
 
 // Get all movies by genre
-func (app *application) getAllMoviesByGenre(w http.ResponseWriter, r *http.Request) {
-	params := httprouter.ParamsFromContext(r.Context())
+// func (app *application) getAllMoviesByGenre(w http.ResponseWriter, r *http.Request) {
+// 	params := httprouter.ParamsFromContext(r.Context())
 
-	genreID, err := strconv.Atoi(params.ByName("genre_id"))
-	if err != nil {
-		app.errorJSON(w, err)
-		return
-	}
+// 	genreID, err := strconv.Atoi(params.ByName("genre_id"))
+// 	if err != nil {
+// 		app.errorJSON(w, err)
+// 		return
+// 	}
 
-	movies, err := app.models.DB.GetAllMovies(genreID)
-	if err != nil {
-		app.errorJSON(w, err)
-		return
-	}
+// 	movies, err := app.models.DB.GetAllMovies(genreID)
+// 	if err != nil {
+// 		app.errorJSON(w, err)
+// 		return
+// 	}
 
-	err = app.writeJSON(w, http.StatusOK, movies, "movies")
-	if err != nil {
-		app.errorJSON(w, err)
-		return
-	}
-}
+// 	err = app.writeJSON(w, http.StatusOK, movies, "movies")
+// 	if err != nil {
+// 		app.errorJSON(w, err)
+// 		return
+// 	}
+// }
 
 // Get all genres
 func (app *application) getAllGenres(w http.ResponseWriter, r *http.Request) {

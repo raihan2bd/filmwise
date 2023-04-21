@@ -8,18 +8,24 @@ import (
 	"time"
 )
 
-func (m *DBModel) GetAllMovies(genre ...int) ([]*Movie, error) {
+func (m *DBModel) GetAllMovies(findByName string) ([]*Movie, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	where := ""
-	if len(genre) > 0 {
-		where = fmt.Sprintf("where id in (select movie_id from movies_genres where genre_id = %d)", genre[0])
-	}
+	var dbArgs []interface{}
+	where := " WHERE title ILIKE $1 OR description ILIKE $2"
+	dbArgs = append(dbArgs, "%"+findByName+"%", "%"+findByName+"%")
 
-	query := fmt.Sprintf("select id, title, description, year, release_date, rating, runtime, created_at, updated_at from movies  %s order by title", where)
+	q2 := ` LEFT JOIN ratings r ON (r.movie_id = m.id)`
+	q3 := ` GROUP BY m.id, m.title, m.description, m.year, m.release_date, m.runtime, m.created_at, m.updated_at
+	order by rating desc limit 2 offset 1`
 
-	rows, err := m.DB.QueryContext(ctx, query)
+	query := `SELECT m.id, m.title, m.description, m.year, m.release_date, COALESCE(trunc(AVG(r.rating)::numeric, 1), 1.0) AS rating, m.runtime, m.created_at, m.updated_at 
+	FROM movies m`
+
+	query += q2 + where + q3
+
+	rows, err := m.DB.QueryContext(ctx, query, dbArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -44,35 +50,35 @@ func (m *DBModel) GetAllMovies(genre ...int) ([]*Movie, error) {
 			return nil, err
 		}
 
-		// get genres, if any
-		genreQuery := `select
-			mg.id, mg.movie_id, mg.genre_id, g.genre_name
-		from
-			movies_genres mg
-			left join genres g on (g.id = mg.genre_id)
-		where
-			mg.movie_id = $1
-		`
+		// // get genres, if any
+		// genreQuery := `select
+		// 	mg.id, mg.movie_id, mg.genre_id, g.genre_name
+		// from
+		// 	movies_genres mg
+		// 	left join genres g on (g.id = mg.genre_id)
+		// where
+		// 	mg.movie_id = $1
+		// `
 
-		genreRows, _ := m.DB.QueryContext(ctx, genreQuery, movie.ID)
+		// genreRows, _ := m.DB.QueryContext(ctx, genreQuery, movie.ID)
 
-		genres := make(map[int]string)
-		for genreRows.Next() {
-			var mg MovieGenre
-			err := genreRows.Scan(
-				&mg.ID,
-				&mg.MovieID,
-				&mg.GenreID,
-				&mg.Genre.GenreName,
-			)
-			if err != nil {
-				return nil, err
-			}
-			genres[mg.GenreID] = mg.Genre.GenreName
-		}
-		genreRows.Close()
+		// genres := make(map[int]string)
+		// for genreRows.Next() {
+		// 	var mg MovieGenre
+		// 	err := genreRows.Scan(
+		// 		&mg.ID,
+		// 		&mg.MovieID,
+		// 		&mg.GenreID,
+		// 		&mg.Genre.GenreName,
+		// 	)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	genres[mg.GenreID] = mg.Genre.GenreName
+		// }
+		// genreRows.Close()
 
-		movie.MovieGenre = genres
+		// movie.MovieGenre = genres
 		movies = append(movies, &movie)
 	}
 
