@@ -296,13 +296,32 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter) (
 	}
 
 	// main query
-	query := `select id, title, description, year, release_date, rating, runtime, created_at, updated_at from movies`
+	query := `SELECT 
+		m.id, 
+		m.title, 
+		m.description, 
+		m.year, 
+		m.release_date, 
+		COALESCE(TRUNC(AVG(r.rating)::numeric, 1), 1.0) AS rating, 
+		m.runtime, 
+		m.created_at, 
+		m.updated_at,
+		COUNT(DISTINCT c.id) AS comments_count,
+		COUNT(DISTINCT f.id) AS favorites_count
+	FROM 
+		movies m
+		LEFT JOIN ratings r ON r.movie_id = m.id
+		LEFT JOIN comments c ON c.movie_id = m.id
+		LEFT JOIN favorites f ON f.movie_id = m.id`
+
+	groupBYQuery := ` GROUP BY
+			m.id`
 
 	// pagination query
 	paginationQuery := fmt.Sprintf(" limit %d offset %d", perPage, offset)
 
 	// join all the query
-	query += where + orderByQuery + paginationQuery
+	query += where + groupBYQuery + orderByQuery + paginationQuery
 
 	// execute query with context
 	rows, err := m.DB.QueryContext(ctx, query, dbArgs...)
@@ -324,6 +343,8 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter) (
 			&movie.Runtime,
 			&movie.CreatedAt,
 			&movie.UpdatedAt,
+			&movie.TotalComments,
+			&movie.TotalFavorites,
 		)
 
 		if err != nil {
