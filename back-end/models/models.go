@@ -30,12 +30,13 @@ type Movie struct {
 	ReleaseDate    time.Time      `json:"release_date"`
 	Runtime        int            `json:"runtime"`
 	Rating         float64        `json:"rating"`
-	Ratings        []Rating       `json:"ratings"`         // this is for movie details
-	TotalFavorites int            `json:"total_favorites"` // this is for movie details
-	Favorites      []Favorite     `json:"favorites"`
+	Ratings        []Rating       `json:"ratings,omitempty"` // this is for movie details
+	TotalFavorites int            `json:"total_favorites"`   // this is for movie details
+	IsFavorite     bool           `json:"is_favorite"`
+	Favorites      []Favorite     `json:"favorites,omitempty"`
 	TotalComments  int            `json:"total_comments"`
-	Comments       []Comment      `json:"comments"` // this is for movie details
-	MovieGenre     map[int]string `json:"genres"`   // this is for movie details
+	Comments       []Comment      `json:"comments,omitempty"` // this is for movie details
+	MovieGenre     map[int]string `json:"genres"`             // this is for movie details
 	CreatedAt      time.Time      `json:"-"`
 	UpdatedAt      time.Time      `json:"-"`
 }
