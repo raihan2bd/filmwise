@@ -104,7 +104,10 @@ func (app *application) getAllMoviesByFilter(w http.ResponseWriter, r *http.Requ
 
 	filter.OrderBy = queryValues.Get("order_by")
 
-	movies, err := app.models.DB.GetAllMoviesByFilter(page, perPage, &filter)
+	// get userID from bareaer token
+	userID := 1
+
+	movies, err := app.models.DB.GetAllMoviesByFilter(page, perPage, &filter, userID)
 	if err != nil {
 		app.errorJSON(w, err)
 		return

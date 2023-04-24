@@ -254,7 +254,7 @@ func (m *DBModel) GenresAll() ([]*Genre, error) {
 }
 
 // Get all movies by filter
-func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter) ([]*Movie, error) {
+func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, userID ...int) ([]*Movie, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -378,6 +378,12 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter) (
 			genres[mg.GenreID] = mg.Genre.GenreName
 		}
 		genreRows.Close()
+
+		if len(userID) > 0 {
+			// check if movie is favorite
+			favoriteQuery := `select id from favorites where movie_id = $1 and user_id = $2`
+			_ = m.DB.QueryRowContext(ctx, favoriteQuery, movie.ID, userID[0]).Scan(&movie.IsFavorite)
+		}
 
 		movie.MovieGenre = genres
 		movies = append(movies, &movie)
