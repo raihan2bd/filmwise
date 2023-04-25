@@ -115,3 +115,14 @@ CREATE TABLE comments (
 
 -- Alter table movies drop column rating
 ALTER TABLE movies DROP COLUMN rating;
+
+-- Create table images
+CREATE TABLE images (
+    id serial not null primary key,
+    user_id integer not null,
+    image_path varchar(255) not null,
+    image_name varchar(255) not null,
+    is_used boolean not null default false,
+    created_at timestamp,
+    updated_at timestamp,
+);
