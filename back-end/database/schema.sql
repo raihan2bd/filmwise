@@ -126,3 +126,6 @@ CREATE TABLE images (
     created_at timestamp,
     updated_at timestamp,
 );
+
+-- Alter table movies add column image
+ALTER TABLE movies ADD COLUMN image varchar(255);
