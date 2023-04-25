@@ -2,11 +2,16 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/raihan2bd/filmwise/models"
 	"github.com/raihan2bd/filmwise/validator"
@@ -745,6 +750,102 @@ func (app *application) removeFavorite(w http.ResponseWriter, r *http.Request) {
 	resp.OK = false
 	resp.ID = id
 	resp.Message = "movie is successfully removed from favorites!"
+
+	err = app.writeJSON(w, http.StatusOK, resp)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+}
+
+// upload image to the server
+func (app *application) uploadImage(w http.ResponseWriter, r *http.Request) {
+	// check if the request is multipart
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+		app.badRequest(w, r, errors.New("invalid content type"))
+		return
+	}
+
+	// parse the multipart form
+	err := r.ParseMultipartForm(2 << 20)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	// get the file from the form
+	file, fileHeader, err := r.FormFile("image")
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	// close the file
+	defer file.Close()
+
+	// validate the file
+	if fileHeader.Size > 2<<20 {
+		app.badRequest(w, r, errors.New("file size should be less than 2MB"))
+		return
+	}
+
+	// create a buffer to store the file
+	fileBytes := make([]byte, fileHeader.Size)
+	_, err = file.Read(fileBytes)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	// create a file name
+	fileName := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(fileHeader.Filename))
+
+	// create folder if it doesn't exist
+	err = os.MkdirAll("./uploads/images", 0755)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	// upload the file to the server
+	err = ioutil.WriteFile(filepath.Join("./uploads/images", fileName), fileBytes, 0644)
+	if err != nil {
+		app.badRequest(w, r, errors.New("can't upload the file to the server"))
+		return
+	}
+
+	// will face userId from the token later
+	userID := 1
+
+	// insert image to the database
+	image := models.Image{
+		ImagePath: "/uploads/images",
+		ImageName: fileName,
+		UserID:    userID,
+	}
+
+	id, err := app.models.DB.InsertImageInfo(&image)
+	if err != nil {
+		// delete the uploaded file
+		err = os.Remove(filepath.Join("./uploads/images", fileName))
+		if err != nil {
+			app.badRequest(w, r, errors.New("can't manage the uploaded file"))
+			return
+		}
+
+		app.badRequest(w, r, errors.New("can't insert image info to the database"))
+		return
+	}
+
+	var resp struct {
+		OK      bool   `json:"ok"`
+		ID      int    `json:"id"`
+		Message string `json:"message"`
+	}
+
+	resp.OK = true
+	resp.ID = id
+	resp.Message = fileName
 
 	err = app.writeJSON(w, http.StatusOK, resp)
 	if err != nil {
