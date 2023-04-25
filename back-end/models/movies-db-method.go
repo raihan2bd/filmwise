@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"time"
 )
 
@@ -428,7 +429,7 @@ func (m *DBModel) InsertMovie(movie *Movie) (int, map[int]string, error) {
 		movieGenres[10] = "Unknown"
 	}
 
-	stmt := `insert into movies (title, description, year, release_date, runtime, rating,
+	stmt := `insert into movies (title, description, year, release_date, runtime, image,
 		created_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id`
 
@@ -438,13 +439,14 @@ func (m *DBModel) InsertMovie(movie *Movie) (int, map[int]string, error) {
 		movie.Year,
 		movie.ReleaseDate,
 		movie.Runtime,
-		movie.Rating,
+		movie.Image,
 		time.Now(),
 		time.Now(),
 	).Scan(&movieID)
 	if err != nil {
 		log.Println(err)
-		return movieID, movieGenres, errors.New("invalid movie data! failed to save the movie")
+		return movieID, movieGenres, err
+		// return movieID, movieGenres, errors.New("invalid movie data! failed to save the movie")
 	}
 
 	for key := range movieGenres {
@@ -487,7 +489,8 @@ func (m *DBModel) UpdateMovie(movie *Movie) (int, map[int]string, error) {
 	}
 
 	stmt := `update movies set title = $1, description = $2, year = $3, release_date = $4, 
-	runtime = $5, rating = $6,
+	runtime = $5,
+	image = $6,
 	updated_at = $7 where id = $8
 	RETURNING id`
 
@@ -497,7 +500,7 @@ func (m *DBModel) UpdateMovie(movie *Movie) (int, map[int]string, error) {
 		movie.Year,
 		movie.ReleaseDate,
 		movie.Runtime,
-		movie.Rating,
+		movie.Image,
 		time.Now(),
 		movie.ID,
 	).Scan(&movieID)
@@ -529,7 +532,7 @@ func (m *DBModel) Get(id int) (*Movie, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `select id, title, description, year, release_date, rating, runtime,
+	query := `select id, title, description, year, release_date, runtime, image,
 				created_at, updated_at from movies where id = $1
 	`
 
@@ -543,8 +546,8 @@ func (m *DBModel) Get(id int) (*Movie, error) {
 		&movie.Description,
 		&movie.Year,
 		&movie.ReleaseDate,
-		&movie.Rating,
 		&movie.Runtime,
+		&movie.Image,
 		&movie.CreatedAt,
 		&movie.UpdatedAt,
 	)
@@ -762,4 +765,91 @@ func (m *DBModel) InsertImageInfo(image *Image) (int, error) {
 	}
 
 	return imageID, nil
+}
+
+// Get Image returns one image name and error, if any
+func (m *DBModel) GetImage(id int) (*Image, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `select id, user_id, image_path, image_name, is_used, created_at, updated_at from images where id = $1`
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+
+	var image Image
+
+	err := row.Scan(
+		&image.ID,
+		&image.UserID,
+		&image.ImagePath,
+		&image.ImageName,
+		&image.IsUsed,
+		&image.CreatedAt,
+		&image.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &image, nil
+}
+
+// get image movieID and error, if any
+func (m *DBModel) GetImageByMovieID(movieID int) (*Image, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var imageName string
+	query := `select image from movies where id = $1`
+
+	row := m.DB.QueryRowContext(ctx, query, movieID)
+	err := row.Scan(&imageName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var image Image
+
+	query = `select id, user_id, image_path, image_name, is_used, created_at, updated_at from images where image_name = $1`
+
+	row = m.DB.QueryRowContext(ctx, query, imageName)
+
+	err = row.Scan(
+		&image.ID,
+		&image.UserID,
+		&image.ImagePath,
+		&image.ImageName,
+		&image.IsUsed,
+		&image.CreatedAt,
+		&image.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, errors.New("failed to get the image")
+	}
+
+	return &image, nil
+}
+
+// delete image info from the database and file from the server
+func (m *DBModel) DeleteImage(image *Image) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// delete image from the server
+	err := os.Remove(fmt.Sprintf(".%s/%s", image.ImagePath, image.ImageName))
+	if err != nil {
+		return errors.New("failed to delete the image from the server")
+	}
+
+	// delete image info from the database
+	stmt := "delete from images where id = $1"
+
+	_, err = m.DB.ExecContext(ctx, stmt, image.ID)
+	if err != nil {
+		return errors.New("failed to delete the image from the database")
+	}
+
+	return nil
 }

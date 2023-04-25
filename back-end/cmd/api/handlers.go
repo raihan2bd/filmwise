@@ -30,7 +30,7 @@ type MoviePayload struct {
 	Year        string         `json:"year"`
 	ReleaseDate string         `json:"release_date"`
 	Runtime     string         `json:"runtime"`
-	Rating      string         `json:"rating"`
+	ImageID     string         `json:"image_id"`
 	MovieGenre  map[int]string `json:"genres"`
 }
 
@@ -197,11 +197,6 @@ func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
 		validator.AddError("runtime", "invalid runtime!")
 	}
 
-	rating, err := strconv.ParseFloat(payload.Rating, 64)
-	if err != nil {
-		validator.AddError("rating", "invalid rating!")
-	}
-
 	if len(payload.MovieGenre) <= 0 {
 		validator.AddError("genres", "movie genre is required")
 	}
@@ -225,7 +220,6 @@ func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
 	movie.Year = year
 	movie.ReleaseDate = releaseDate
 	movie.Runtime = runtime
-	movie.Rating = rating
 	movie.MovieGenre = payload.MovieGenre
 
 	if len(payload.ID) > 0 {
@@ -249,12 +243,57 @@ func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
 	var movieID int
 	var moviesGenres map[int]string
 	respMsg := "Movie is inserted successfully!"
+	var image *models.Image
+
+	if payload.ImageID != "" {
+		imageID, err := strconv.Atoi(payload.ImageID)
+		if err != nil {
+			app.logger.Println(err)
+			app.errorJSON(w, errors.New("invalid image id"))
+			return
+		}
+
+		// check if image is exists of not if not then return error
+		image, err = app.models.DB.GetImage(imageID)
+		if err != nil {
+			app.logger.Println(err)
+			app.errorJSON(w, errors.New("invalid image id"))
+			return
+		}
+	}
 
 	if movie.ID > 0 {
+		// get movie image
+		if image != nil {
+
+			movieImage, err := app.models.DB.GetImageByMovieID(movie.ID)
+			if err != nil {
+				app.logger.Println(err)
+				app.errorJSON(w, errors.New("invalid movie id"))
+				return
+			}
+			// if image is exists then delete it
+			if movieImage.ID != image.ID {
+				err = app.models.DB.DeleteImage(movieImage)
+				if err != nil {
+					app.logger.Println(err)
+					app.errorJSON(w, errors.New("invalid movie id"))
+					return
+				}
+			}
+			fmt.Println("hi")
+			movie.Image = image.ImageName
+		}
 		respMsg = "Movie is successfully updated"
 		movieID, moviesGenres, err = app.models.DB.UpdateMovie(&movie)
 	} else {
-		movieID, moviesGenres, err = app.models.DB.InsertMovie(&movie)
+		if image != nil {
+			movie.Image = image.ImageName
+			movieID, moviesGenres, err = app.models.DB.InsertMovie(&movie)
+		} else {
+			app.errorJSON(w, errors.New("image is required"))
+			return
+		}
 	}
 
 	if err != nil {
