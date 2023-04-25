@@ -40,7 +40,7 @@ func (v *Validator) IsLength(data, key string, minLength, maxLength int, message
 	trimData := len(strings.Trim(data, ""))
 
 	if trimData < minLength || trimData > maxLength {
-		msg := fmt.Sprintf("%s should be minimum %d to maximum %d characters long!", key, minLength, maxLength)
+		msg := fmt.Sprintf("%s must be between %d and %d characters ", key, minLength, maxLength)
 		if len(message) > 0 {
 			msg = message[0]
 		}

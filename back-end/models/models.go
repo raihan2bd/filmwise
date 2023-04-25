@@ -23,16 +23,23 @@ func NewModels(db *sql.DB) Models {
 
 // Movie is the type for movies
 type Movie struct {
-	ID          int            `json:"id"`
-	Title       string         `json:"title"`
-	Description string         `json:"description"`
-	Year        int            `json:"year"`
-	ReleaseDate time.Time      `json:"release_date"`
-	Runtime     int            `json:"runtime"`
-	Rating      float64        `json:"rating"`
-	MovieGenre  map[int]string `json:"genres"`
-	CreatedAt   time.Time      `json:"-"`
-	UpdatedAt   time.Time      `json:"-"`
+	ID             int            `json:"id"`
+	Title          string         `json:"title"`
+	Description    string         `json:"description"`
+	Year           int            `json:"year"`
+	ReleaseDate    time.Time      `json:"release_date"`
+	Runtime        int            `json:"runtime"`
+	Rating         float64        `json:"rating"`
+	Ratings        []Rating       `json:"ratings,omitempty"` // this is for movie details
+	TotalFavorites int            `json:"total_favorites"`   // this is for movie details
+	IsFavorite     bool           `json:"is_favorite"`
+	Favorites      []Favorite     `json:"favorites,omitempty"`
+	TotalComments  int            `json:"total_comments"`
+	Comments       []Comment      `json:"comments,omitempty"` // this is for movie details
+	MovieGenre     map[int]string `json:"genres"`             // this is for movie details
+	Image          string         `json:"image"`
+	CreatedAt      time.Time      `json:"-"`
+	UpdatedAt      time.Time      `json:"-"`
 }
 
 // Genre is the type for genre
@@ -66,4 +73,44 @@ type MovieFilter struct {
 type QueryParam struct {
 	Key   string
 	Value interface{}
+}
+
+// model for rating
+type Rating struct {
+	ID        int       `json:"id"`
+	MovieID   int       `json:"movie_id"`
+	UserID    int       `json:"user_id"`
+	Rating    float32   `json:"rating"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
+}
+
+// model for comment
+type Comment struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	MovieID   int       `json:"movie_id"`
+	Comment   string    `json:"comment"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"commented_at"`
+}
+
+// model for favorite
+type Favorite struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	MovieID   int       `json:"movie_id"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"fav_at"`
+}
+
+// model for Image
+type Image struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	ImagePath string    `json:"image_path"`
+	ImageName string    `json:"image_name"`
+	IsUsed    bool      `json:"is_used"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
 }
