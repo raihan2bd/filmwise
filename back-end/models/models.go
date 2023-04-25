@@ -102,3 +102,14 @@ type Favorite struct {
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"fav_at"`
 }
+
+// model for Image
+type Image struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	ImagePath string    `json:"image_path"`
+	ImageName string    `json:"image_name"`
+	IsUsed    bool      `json:"is_used"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
+}
