@@ -37,6 +37,7 @@ type Movie struct {
 	TotalComments  int            `json:"total_comments"`
 	Comments       []Comment      `json:"comments,omitempty"` // this is for movie details
 	MovieGenre     map[int]string `json:"genres"`             // this is for movie details
+	Image          string         `json:"image"`
 	CreatedAt      time.Time      `json:"-"`
 	UpdatedAt      time.Time      `json:"-"`
 }
