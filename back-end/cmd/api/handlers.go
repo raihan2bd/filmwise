@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -847,7 +846,7 @@ func (app *application) uploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// upload the file to the server
-	err = ioutil.WriteFile(filepath.Join("./uploads/images", fileName), fileBytes, 0644)
+	err = os.WriteFile(filepath.Join("./uploads/images", fileName), fileBytes, 0644)
 	if err != nil {
 		app.badRequest(w, r, errors.New("can't upload the file to the server"))
 		return
