@@ -738,3 +738,28 @@ func (m *DBModel) RemoveFavorite(id int) error {
 
 	return nil
 }
+
+// Insert image info to the database
+func (m *DBModel) InsertImageInfo(image *Image) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var imageID int
+	stmt := `insert into images (user_id, image_path, image_name, is_used, created_at, updated_at)
+						values($1, $2, $3, $4, $5, $6)
+						RETURNING id`
+
+	err := m.DB.QueryRowContext(ctx, stmt,
+		image.UserID,
+		image.ImagePath,
+		image.ImageName,
+		image.IsUsed,
+		time.Now(),
+		time.Now(),
+	).Scan(&imageID)
+	if err != nil {
+		return imageID, errors.New("failed to upload the image")
+	}
+
+	return imageID, nil
+}
