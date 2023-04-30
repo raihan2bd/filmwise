@@ -57,7 +57,9 @@ Create TABLE users (
   name varchar(100) not null,
   email varchar(255) not null unique,
   password varchar(60) not null,
-  user_type varchar(55) not null default 'user'
+  user_type varchar(55) not null default 'user',
+  created_at timestamp,
+  updated_at timestamp
 );
 
 -- Create ratings table inside the database
@@ -124,7 +126,7 @@ CREATE TABLE images (
     image_name varchar(255) not null,
     is_used boolean not null default false,
     created_at timestamp,
-    updated_at timestamp,
+    updated_at timestamp
 );
 
 -- Alter table movies add column image

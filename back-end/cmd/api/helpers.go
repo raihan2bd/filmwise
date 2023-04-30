@@ -5,6 +5,9 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"time"
+
+	"github.com/golang-jwt/jwt"
 )
 
 // readJSON reads json from request body into data. We only accept a single json value in the body
@@ -90,4 +93,30 @@ func (app *application) errorJSON(w http.ResponseWriter, err error, status ...in
 	}
 
 	app.writeJSON(w, statusCode, theError, "error")
+}
+
+// verify authentication token
+func (app *application) verifyToken(tokenString string) (*CustomClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(app.config.jwt.secret), nil
+	})
+
+	// if token is invalid then return error
+	if err != nil || !token.Valid {
+		return nil, errors.New("unauthorized - invalid token")
+	}
+
+	// Get the custom claims from the token
+	claims, ok := token.Claims.(*CustomClaims)
+	if !ok {
+		return nil, errors.New("unauthorized - invalid token")
+	}
+
+	// check if token is expired
+	if !claims.VerifyExpiresAt(time.Now().Unix(), true) {
+		return nil, errors.New("unauthorized - token expired")
+	}
+
+	// return claims
+	return claims, nil
 }

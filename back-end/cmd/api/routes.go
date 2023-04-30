@@ -1,14 +1,31 @@
 package main
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/alice"
 )
 
+// wrap function will help to chain between multiple middlewares
+func (app *application) wrap(next http.Handler) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		// pass httprouter.Params to request context
+		ctx := context.WithValue(r.Context(), "params", ps)
+		// call next middleware with new context
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+}
+
+// routes funtion helps to create back-end routes
 func (app *application) routes() http.Handler {
+	// initialize the router
 	router := httprouter.New()
 
+	// initialize secure middleware
+	secure := alice.New(app.authenticate)
+	// public routes
 	router.HandlerFunc(http.MethodGet, "/status", app.GetStatus)
 	router.HandlerFunc(http.MethodGet, "/v1/movies", app.getAllMoviesByFilter)
 	router.HandlerFunc(http.MethodGet, "/v1/movies/all", app.getAllMovies)
@@ -16,8 +33,13 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/genres", app.getAllGenres)
 	router.HandlerFunc(http.MethodGet, "/v1/movie/get_one/:id", app.getOneMovie)
 
+	// router.HandlerFunc(http.MethodPost, "/v1/user/signup/", app.signUp)
+	router.HandlerFunc(http.MethodPost, "/v1/user/login/", app.loginUser)
+	// router.HandlerFunc(http.MethodGet, "/v1/user/logout/", app.logout)
+
 	// private routes for user
-	router.HandlerFunc(http.MethodPost, "/v1/movie/rating/add", app.addOrUpdateRating)
+	router.POST("/v1/rating/add", app.wrap(secure.ThenFunc(app.addOrUpdateRating)))
+	// router.HandlerFunc(http.MethodPost, "/v1/movie/rating/add", app.addOrUpdateRating)
 	router.HandlerFunc(http.MethodPost, "/v1/movie/rating/update", app.addOrUpdateRating)
 
 	// routes for comments

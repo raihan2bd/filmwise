@@ -114,3 +114,14 @@ type Image struct {
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
 }
+
+// model for User
+type User struct {
+	ID        int       `json:"id"`
+	FullName  string    `json:"full_name,omitempty"`
+	Email     string    `json:"email"`
+	UserType  string    `json:"user_type"`
+	Password  string    `json:"-,omitempty"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
+}

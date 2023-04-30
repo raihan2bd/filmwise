@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,10 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/raihan2bd/filmwise/models"
 	"github.com/raihan2bd/filmwise/validator"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // constants for default values
@@ -900,6 +903,78 @@ func (app *application) uploadImage(w http.ResponseWriter, r *http.Request) {
 	resp.OK = true
 	resp.ID = id
 	resp.Message = fileName
+
+	err = app.writeJSON(w, http.StatusOK, resp)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+}
+
+// login user
+type credentials struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// custom claims
+type CustomClaims struct {
+	UserType string `json:"user_type"`
+	jwt.StandardClaims
+}
+
+func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
+	var creds credentials
+	err := json.NewDecoder(r.Body).Decode(&creds)
+	if err != nil {
+		app.badRequest(w, r, errors.New("invalid request body"))
+		return
+	}
+
+	// get user from the database
+	user, err := app.models.DB.GetUserByEmail(creds.Email)
+	if err != nil {
+		app.badRequest(w, r, errors.New("invalid email or password"))
+		return
+	}
+
+	// compare passwords
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password))
+	if err != nil {
+		app.badRequest(w, r, errors.New("invalid email or password"))
+		return
+	}
+
+	// custom claims
+	claims := CustomClaims{
+		UserType: user.UserType,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+			IssuedAt:  time.Now().Unix(),
+			Issuer:    "movieapp",
+			Subject:   strconv.Itoa(user.ID),
+			NotBefore: time.Now().Unix(),
+			Audience:  "movieapp",
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	// Sign the token with the secret key
+	signedToken, err := token.SignedString([]byte(app.config.jwt.secret))
+	if err != nil {
+		app.errorJSON(w, errors.New("can't generate jwt token"), http.StatusInternalServerError)
+		return
+	}
+
+	var resp struct {
+		OK      bool   `json:"ok"`
+		Token   string `json:"token"`
+		Message string `json:"message"`
+	}
+
+	resp.OK = true
+	resp.Token = signedToken
+	resp.Message = "user is successfully logged in!"
 
 	err = app.writeJSON(w, http.StatusOK, resp)
 	if err != nil {
