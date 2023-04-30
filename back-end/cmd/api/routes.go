@@ -16,9 +16,9 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/genres", app.getAllGenres)
 	router.HandlerFunc(http.MethodGet, "/v1/movie/get_one/:id", app.getOneMovie)
 
-	router.HandlerFunc(http.MethodPost, "/v1/user/signup/", app.postSingup)
-	router.HandlerFunc(http.MethodPost, "/v1/user/login/", app.postLogin)
-	router.HandlerFunc(http.MethodGet, "/v1/user/logout/", app.logout)
+	// router.HandlerFunc(http.MethodPost, "/v1/user/signup/", app.signUp)
+	router.HandlerFunc(http.MethodPost, "/v1/user/login/", app.loginUser)
+	// router.HandlerFunc(http.MethodGet, "/v1/user/logout/", app.logout)
 
 	// private routes for user
 	router.HandlerFunc(http.MethodPost, "/v1/movie/rating/add", app.addOrUpdateRating)
