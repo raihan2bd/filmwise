@@ -57,7 +57,9 @@ Create TABLE users (
   name varchar(100) not null,
   email varchar(255) not null unique,
   password varchar(60) not null,
-  user_type varchar(55) not null default 'user'
+  user_type varchar(55) not null default 'user',
+  created_at timestamp,
+  updated_at timestamp
 );
 
 -- Create ratings table inside the database
