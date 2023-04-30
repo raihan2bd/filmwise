@@ -12,12 +12,12 @@ insert into genres(genre_name, created_at, updated_at)
     ('Romance', '2023-04-06', '2023-04-06');
 
 -- Insert dummy data into the movies table
-insert into movies (id, title, description, release_date, "year", runtime, created_at, updated_at)
+insert into movies (title, description, release_date, "year", runtime, created_at, updated_at)
   values
-    ('The Shawshank Redemption', 'Two imprisoned men bond over a number of years', '1994-10-14', 1994, 142, 9.3, '2023-04-06', '2023-04-06'),
-    ('The Pursuit of Happyness', 'Based on a true story about a man named Christopher Gardner.', '2006-12-15', 2006, 117, 8.0, '2023-04-06', '2023-04-06'),
-    ('The Dark Knight', 'The menace known as the Joker wreaks havoc on Gotham City.', '2008-07-18', 2008, 152, 9.0, '2023-04-06', '2023-04-06'),
-    ('Forrest Gump', 'Forrest Gump is a simple man with a low I.Q. but good intentions.', '1994-07-06', 1994, 142, 8.8, '2023-04-06', '2023-04-06');
+    ('The Shawshank Redemption', 'Two imprisoned men bond over a number of years', '1994-10-14', 1994, 142, '2023-04-06', '2023-04-06'),
+    ('The Pursuit of Happyness', 'Based on a true story about a man named Christopher Gardner.', '2006-12-15', 2006, 117, '2023-04-06', '2023-04-06'),
+    ('The Dark Knight', 'The menace known as the Joker wreaks havoc on Gotham City.', '2008-07-18', 2008, 152, '2023-04-06', '2023-04-06'),
+    ('Forrest Gump', 'Forrest Gump is a simple man with a low I.Q. but good intentions.', '1994-07-06', 1994, 142, '2023-04-06', '2023-04-06');
 
     -- Inset dummy data into movies_genres
     INSERT INTO public.movies_genres (movie_id,genre_id,created_at,updated_at) VALUES

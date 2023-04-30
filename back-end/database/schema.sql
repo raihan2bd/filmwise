@@ -124,7 +124,7 @@ CREATE TABLE images (
     image_name varchar(255) not null,
     is_used boolean not null default false,
     created_at timestamp,
-    updated_at timestamp,
+    updated_at timestamp
 );
 
 -- Alter table movies add column image
