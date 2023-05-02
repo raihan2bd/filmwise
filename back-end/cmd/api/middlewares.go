@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 )
+
+// add custom type for context key
+type userIDKey string
 
 // enableCORS adds the Access-Control-Allow-Origin header to all responses.
 func (app *application) enableCORS(next http.Handler) http.Handler {
@@ -55,9 +60,15 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		// check user_type is allowed
 		if claims.UserType == "admin" || claims.UserType == "user" {
 			// add user_id to context
-			// ctx := context.WithValue(r.Context(), "user_id", claims.Subject)
-			// next.ServeHTTP(w, r.WithContext(ctx))
-			next.ServeHTTP(w, r)
+			userID, err := strconv.Atoi(claims.Subject)
+			if err != nil {
+				app.errorJSON(w, errors.New("unauthorized - user does not is not valid"))
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), userIDKey("user_id"), userID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			// next.ServeHTTP(w, r)
 		} else {
 			app.errorJSON(w, errors.New("unauthorized - user does not have permission"))
 			return
