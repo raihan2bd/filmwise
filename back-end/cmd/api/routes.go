@@ -37,10 +37,10 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/user/login/", app.loginUser)
 	// router.HandlerFunc(http.MethodGet, "/v1/user/logout/", app.logout)
 
-	// private routes for user
+	/* private routes for user */
+
+	// routes for ratings
 	router.POST("/v1/rating/add", app.wrap(secure.ThenFunc(app.addOrUpdateRating)))
-	// router.HandlerFunc(http.MethodPost, "/v1/movie/rating/add", app.addOrUpdateRating)
-	router.HandlerFunc(http.MethodPost, "/v1/movie/rating/update", app.addOrUpdateRating)
 
 	// routes for comments
 	router.HandlerFunc(http.MethodPost, "/v1/movie/comments/add", app.addOrUpdateComment)
