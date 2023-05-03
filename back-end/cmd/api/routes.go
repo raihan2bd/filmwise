@@ -50,8 +50,8 @@ func (app *application) routes() http.Handler {
 	router.GET("/v1/movie/comments/delete/:id", app.wrap(secure.ThenFunc(app.deleteComment)))
 
 	// routes for favorites
-	router.HandlerFunc(http.MethodGet, "/v1/movie/favorites/add/:id", app.addFavorite)
-	router.HandlerFunc(http.MethodGet, "/v1/movie/favorites/delete/:id", app.removeFavorite)
+	router.GET("/v1/movie/favorites/add/:id", app.wrap(secure.ThenFunc(app.addFavorite)))
+	router.GET("/v1/movie/favorites/delete/:id", app.wrap(secure.ThenFunc(app.removeFavorite)))
 
 	// private routes for admin
 	router.POST("/v1/images/upload", app.wrap(secureAdmin.ThenFunc(app.uploadImage)))
