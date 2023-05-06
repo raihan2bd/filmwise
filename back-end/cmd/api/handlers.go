@@ -993,8 +993,13 @@ func (app *application) signUp(w http.ResponseWriter, r *http.Request) {
 	v := validator.New()
 
 	// check email is valid or not
+	v.IsEmail(payload.Email, "email", "invalid email address")
 
-	// check email is exist or not if email is not exit then continue otherwise return error
+	// check email is already exist or not if email is not exit then continue otherwise return error
+	u, _ := app.models.DB.GetUserByEmail(payload.Email)
+	if u != nil {
+		v.AddError("email", "email is already exits")
+	}
 
 	// check user password is valid or not
 
