@@ -978,3 +978,41 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// signUp a new user
+func (app *application) signUp(w http.ResponseWriter, r *http.Request) {
+	var payload models.User
+
+	// read json from the body
+	err := app.readJSON(w, r, &payload)
+	if err != nil {
+		app.badRequest(w, r, errors.New("invalid json request"))
+		return
+	}
+
+	v := validator.New()
+
+	// check email is valid or not
+
+	// check email is exist or not if email is not exit then continue otherwise return error
+
+	// check user password is valid or not
+
+	// check your full name is valid or not.
+
+	if !v.Valid() {
+		err := app.writeJSON(w, http.StatusBadRequest, v)
+		if err != nil {
+			app.badRequest(w, r, err)
+			return
+		}
+		return
+	}
+
+	// convert the password into hash
+
+	// insert new user into the database
+
+	// return ok response with message
+
+}
