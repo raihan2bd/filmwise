@@ -1005,6 +1005,9 @@ func (app *application) signUp(w http.ResponseWriter, r *http.Request) {
 	v.IsValidPassword(payload.Password, "password")
 
 	// check your full name is valid or not.
+	v.Required(payload.FullName, "full_name", "Full Name is required")
+	v.IsLength(payload.FullName, "full_name", 5, 55)
+	v.IsValidFullName(payload.FullName, "full_name")
 
 	if !v.Valid() {
 		err := app.writeJSON(w, http.StatusBadRequest, v)
