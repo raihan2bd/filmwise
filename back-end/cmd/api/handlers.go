@@ -1019,6 +1019,12 @@ func (app *application) signUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// convert the password into hash
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), 12)
+
+	if err != nil {
+		app.errorJSON(w, errors.New("internal server error"), http.StatusInternalServerError)
+		return
+	}
 
 	// insert new user into the database
 
