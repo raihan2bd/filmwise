@@ -1002,6 +1002,7 @@ func (app *application) signUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check user password is valid or not
+	v.IsValidPassword(payload.Password, "password")
 
 	// check your full name is valid or not.
 
