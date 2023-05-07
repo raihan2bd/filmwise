@@ -1027,7 +1027,20 @@ func (app *application) signUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// insert new user into the database
+	err = app.models.DB.InsertUser(payload.FullName, payload.Email, string(hashedPassword))
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	// send the response
+	var resp struct {
+		OK      bool
+		Message string
+	}
 
 	// return ok response with message
-
+	resp.OK = true
+	resp.Message = "User have sign up successfully now login with your credentials!"
+	app.writeJSON(w, http.StatusOK, resp)
 }

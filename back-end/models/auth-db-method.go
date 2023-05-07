@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 func (m *DBModel) InsertUser(username, email, password string) error {
 	stmt := `INSERT INTO users (username, email, password, created_at, updated_at)
@@ -8,7 +11,7 @@ func (m *DBModel) InsertUser(username, email, password string) error {
 
 	_, err := m.DB.Exec(stmt, username, email, password, time.Now(), time.Now())
 	if err != nil {
-		return err
+		return errors.New("failed to save the credientials")
 	}
 
 	return nil
