@@ -507,38 +507,36 @@ func (app *application) deleteGenre(w http.ResponseWriter, r *http.Request) {
 // Add or Update Rating
 func (app *application) addOrUpdateRating(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		MovieID string `json:"movie_id"`
-		Rating  string `json:"rating"`
+		MovieID int     `json:"movie_id"`
+		Rating  float64 `json:"rating"`
+	}
+
+	// get user id from context
+	userID, ok := r.Context().Value(userIDKey("user_id")).(int)
+	if !ok {
+		app.errorJSON(w, errors.New("invalid user type"))
+		return
+	}
+
+	if userID <= 0 {
+		app.errorJSON(w, errors.New("invalid user type"))
+		return
 	}
 
 	// read json from the body
 	err := app.readJSON(w, r, &payload)
 	if err != nil {
+		app.logger.Println(err.Error())
 		app.errorJSON(w, errors.New("invalid json request"))
 		return
 	}
 
 	validator := validator.New()
-	validator.Required(payload.MovieID, "movie_id", "movie id is required")
-	validator.Required(payload.Rating, "rating", "rating is required")
-	movieID, err := strconv.Atoi(payload.MovieID)
-	if err != nil {
-		validator.AddError("movie_id", "invalid movie_id")
+	if payload.MovieID <= 0 {
+		validator.AddError("movie_id", "invalid movie id")
 	}
 
-	if movieID > 0 {
-		_, err = app.models.DB.Get(movieID)
-		if err != nil {
-			validator.AddError("movie_id", "invalid movie id")
-		}
-	}
-
-	movieRating, err := strconv.ParseFloat(payload.Rating, 32)
-	if err != nil {
-		validator.AddError("rating", "invalid rating")
-	}
-
-	if movieRating < 1.0 || movieRating > 10.0 {
+	if payload.Rating < 1.0 || payload.Rating > 10.0 {
 		validator.AddError("rating", "movie rating should be between 1.0 to 10.0")
 	}
 
@@ -551,16 +549,14 @@ func (app *application) addOrUpdateRating(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// user id
-	userID := 1
-
 	// check if rating is already exists
 	ratingID := 0
-	ratingID, _ = app.models.DB.CheckRating(movieID, userID)
+	ratingID, _ = app.models.DB.CheckRating(payload.MovieID, userID)
 
 	rating := models.Rating{
 		ID:        ratingID,
-		MovieID:   movieID,
+		Rating:    float32(payload.Rating),
+		MovieID:   payload.MovieID,
 		UserID:    userID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -981,4 +977,70 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 		app.errorJSON(w, err)
 		return
 	}
+}
+
+// signUp a new user
+func (app *application) signUp(w http.ResponseWriter, r *http.Request) {
+	var payload models.User
+
+	// read json from the body
+	err := app.readJSON(w, r, &payload)
+	if err != nil {
+		app.badRequest(w, r, errors.New("invalid json request"))
+		return
+	}
+
+	v := validator.New()
+
+	// check email is valid or not
+	v.IsEmail(payload.Email, "email", "invalid email address")
+
+	// check email is already exist or not if email is not exit then continue otherwise return error
+	u, _ := app.models.DB.GetUserByEmail(payload.Email)
+	if u != nil {
+		v.AddError("email", "email is already exits")
+	}
+
+	// check user password is valid or not
+	v.IsValidPassword(payload.Password, "password")
+
+	// check your full name is valid or not.
+	v.Required(payload.FullName, "full_name", "Full Name is required")
+	v.IsLength(payload.FullName, "full_name", 5, 55)
+	v.IsValidFullName(payload.FullName, "full_name")
+
+	if !v.Valid() {
+		err := app.writeJSON(w, http.StatusBadRequest, v)
+		if err != nil {
+			app.badRequest(w, r, err)
+			return
+		}
+		return
+	}
+
+	// convert the password into hash
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), 12)
+
+	if err != nil {
+		app.errorJSON(w, errors.New("internal server error"), http.StatusInternalServerError)
+		return
+	}
+
+	// insert new user into the database
+	err = app.models.DB.InsertUser(payload.FullName, payload.Email, string(hashedPassword))
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	// send the response
+	var resp struct {
+		OK      bool
+		Message string
+	}
+
+	// return ok response with message
+	resp.OK = true
+	resp.Message = "User have sign up successfully now login with your credentials!"
+	app.writeJSON(w, http.StatusOK, resp)
 }
