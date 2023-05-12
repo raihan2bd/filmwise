@@ -1,17 +1,23 @@
 package models
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
-func (m *DBModel) InsertUser(username, email, password string) error {
-	stmt := `INSERT INTO users (username, email, password, created_at, updated_at)
+func (m *DBModel) InsertUser(name, email, password string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `INSERT INTO users (name, email, password, created_at, updated_at)
 	VALUES($1, $2, $3, $4, $5)`
 
-	_, err := m.DB.Exec(stmt, username, email, password, time.Now(), time.Now())
+	_, err := m.DB.ExecContext(ctx, stmt, name, email, password, time.Now(), time.Now())
 	if err != nil {
-		return errors.New("failed to save the credientials")
+		fmt.Println(err)
+		return errors.New("failed to save the credentials")
 	}
 
 	return nil
