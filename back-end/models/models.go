@@ -121,7 +121,7 @@ type User struct {
 	FullName  string    `json:"full_name,omitempty"`
 	Email     string    `json:"email"`
 	UserType  string    `json:"user_type"`
-	Password  string    `json:"-,omitempty"`
+	Password  string    `json:"password,omitempty"`
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
 }
