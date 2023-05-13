@@ -18,22 +18,25 @@
   position: absolute;
   z-index: 1;
   left: 0;
-  top: 0;
+  bottom: 0;
+  right: 0;
   width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.85);
+  height: 90px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgb(0, 0, 0.8), rgb(0, 0, 0), rgb(0, 0, 0));
   display: flex;
-  align-items: center;
+  align-items: end;
   justify-content: center;
   text-align: center;
+  padding-top: 1rem;
+  padding-bottom: 0.5rem;
 }
 
-.slider_title h2 {
-  max-width: 650px;
+.slider_title_link {
   width: 100%;
-  color: #ff5e00;
-  font-size: 1.5;
-  word-wrap: break-word;
+  color: #ffffff;
+  font-size: 1.7rem;
+  font-weight: bold;
+  display: block;
 }
 
 

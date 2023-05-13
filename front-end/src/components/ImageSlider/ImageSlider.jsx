@@ -13,9 +13,7 @@ const ImageSlider = () => {
         <img src={Forrest_gump_img} alt="Movie1" />
       </div>
       <div className={classes.slider_title}>
-        <h2>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Necessitatibus 1
-        </h2>
+        <a className={classes.slider_title_link} href="#">Forrest Gump (1994)</a>
       </div>
     </div>,
     <div className={classes.slider_item} data-value="2">
@@ -23,9 +21,7 @@ const ImageSlider = () => {
         <img src={Forrest_gump_img} alt="Movie2" />
       </div>
       <div className={classes.slider_title}>
-        <h2>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Necessitatibus 2
-        </h2>
+      <a className={classes.slider_title_link} href="#">Forrest Gump (1994)</a>
       </div>
     </div>,
     <div className={classes.slider_item} data-value="3">
@@ -33,9 +29,7 @@ const ImageSlider = () => {
         <img src={Forrest_gump_img} alt="Movie3" />
       </div>
       <div className={classes.slider_title}>
-        <h2>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Necessitatibus 3
-        </h2>
+      <a className={classes.slider_title_link} href="#">Forrest Gump (1994)</a>
       </div>
     </div>,
   ];
