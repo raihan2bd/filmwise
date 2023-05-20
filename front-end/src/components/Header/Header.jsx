@@ -1,67 +1,105 @@
-import { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { FiMenu, FiX, FiSearch } from 'react-icons/fi'
+import { useState } from "react";
+import { Link, NavLink } from "react-router-dom";
+import { FiMenu, FiX, FiSearch } from "react-icons/fi";
+import Button from "../UI/Button";
 
-import './Header.css'
+import "./Header.css";
 
 const Header = () => {
-  const [showNav, setShowNav] = useState(false)
-  const [showSearch, setShowSearch] = useState(false)
+  const [showNav, setShowNav] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   const toggleNavHandler = () => {
     setShowNav((prevState) => !prevState);
-  }
-  
+  };
+
   const showSearchHandler = () => {
     setShowSearch(true);
-  }
+  };
 
   const hideSearchHandler = () => {
     setShowSearch(false);
-  }
+  };
 
   return (
-    <header className='header bg-dark color-white d-flex jc-space-between align-items-center'>
+    <header className="header bg-dark color-white d-flex jc-space-between align-items-center">
       <div className="brand d-flex align-items-center">
-        <button className='mob-menu sm-content' onClick={toggleNavHandler}>
+        <button className="mob-menu sm-content" onClick={toggleNavHandler}>
           {!showNav ? <FiMenu /> : <FiX />}
         </button>
         <Link className="brand-name">FilmWise</Link>
       </div>
       <nav className="nav-bar d-flex gap-1">
-        <ul className={showNav? "nav-group d-flex-sm-column d-flex-md-row gap-1 list-style-none": "nav-group d-flex-md-row gap-1 list-style-none"}>
+        <ul
+          className={
+            showNav
+              ? "nav-group d-flex-sm-column d-flex-md-row gap-1 list-style-none"
+              : "nav-group d-flex-md-row gap-1 list-style-none"
+          }
+        >
           <li>
-            <NavLink className="nav-link" to="/">Home</NavLink>
+            <NavLink className="nav-link" to="/">
+              Home
+            </NavLink>
           </li>
           <li>
-            <NavLink className="nav-link" to="/movies">Movies</NavLink>
+            <NavLink className="nav-link" to="/movies">
+              Movies
+            </NavLink>
           </li>
           <li>
-            <NavLink className="nav-link" to="/series">Series</NavLink>
+            <NavLink className="nav-link" to="/series">
+              Series
+            </NavLink>
           </li>
           <li>
-            <NavLink className="nav-link" to="/login">Login</NavLink>
+            <NavLink className="nav-link" to="/login">
+              Login
+            </NavLink>
           </li>
-
         </ul>
 
-          <div className="sm-content">
-            <button className='btn-search-toggle' onClick={showSearchHandler}>
-              <FiSearch />
-            </button>
-            {showSearch && (<div className='sm-search-form d-flex jc-space-between'>
-              <button onClick={hideSearchHandler} className='btn-search-toggle color-orange'>X</button>
-              <form action="#" className='search-item d-flex'>
-                <input className="search-input" type="search" placeholder="Search movies..." />
-                <button className='btn-search-toggle' type="submit"><FiSearch /></button>
+        <div className="sm-content">
+          <button className="btn-search-toggle" onClick={showSearchHandler}>
+            <FiSearch />
+          </button>
+          {showSearch && (
+            <div className="sm-search-form d-flex jc-space-between">
+              <button
+                onClick={hideSearchHandler}
+                className="btn-search-toggle color-orange"
+              >
+                X
+              </button>
+              <form action="#" className="search-item d-flex">
+                <input
+                  className="search-input"
+                  type="search"
+                  placeholder="Search movies..."
+                />
+                <Button
+                  btnClass="btn-search-toggle"
+                  type="submit"
+                  onClick={() => {
+                    console.log("I am working!");
+                  }}
+                >
+                  <FiSearch />
+                </Button>
               </form>
-            </div>)}
-            
             </div>
-          <form action="#" className='search-item d-flex md-content'>
-            <input className="search-input" type="search" placeholder="Search movies..." />
-            <button type="submit" className='btn-search-toggle'><FiSearch /></button>
-          </form>
+          )}
+        </div>
+        <form action="#" className="search-item d-flex md-content">
+          <input
+            className="search-input"
+            type="search"
+            placeholder="Search movies..."
+          />
+          <button type="submit" className="btn-search-toggle">
+            <FiSearch />
+          </button>
+        </form>
       </nav>
     </header>
   );
