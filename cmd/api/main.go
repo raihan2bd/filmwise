@@ -45,10 +45,11 @@ func main() {
 	var cfg config
 
 	// get Environment variables
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	_ = godotenv.Load()
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "4000"
