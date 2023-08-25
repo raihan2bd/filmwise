@@ -15,7 +15,7 @@
     - [Install](#install)
     - [Database](#database)
     - [Usage](#usage)
-    - [Testing](#testing)
+    - [Build](#build)
     - [Deployment](#deployment)
   - [👥 Authors ](#-authors-)
   - [🔭 Future Features ](#-future-features-)
@@ -74,9 +74,11 @@ To get a local copy up and running, follow these steps.
 ### Prerequisites
 
 In order to run this project you need:
+- Then Make sure you have installed [Go (golang)](https://go.dev/dl/) version 1.20.4 or the latest stable version.
+- Then make sure you have installed [PostgreSQL](https://www.postgresql.org/) on your local machine if you want to use this project locally.
+- Then Create a database called `filmwise` inside the database and create tables using this `project>database` `schema` SQL query.
 
-- First of all to see this project's graphical interface make sure you run the [front-end](https://github.com/Thinus01/Resort_Booking_Front-end) part
-- Before running this repo on your local machine make sure you have installed <a name="install"></a> [Ruby](https://www.ruby-lang.org/), [Rails](https://rubyonrails.org/), and [PostgreSQL](https://www.postgresql.org/)
+- First of all to see this project's graphical interface make sure you run the [front-end](https://github.com/raihan2bd/filmwise-front) part
 
 ### Setup
 
@@ -84,33 +86,14 @@ In order to run this project you need:
 
 ```sh
   cd your-folder
-  https://github.com/Thinus01/Resort_Booking_Back-end
+  https://github.com/raihan2bd/filmwise.git
 ```
 
-- Before running the project please make sure you create a `.env` file to your project root directory and add `DATABASE_USER_NAME`, `DATABASE_PASSWORD`, and `JWT_SECRET_KEY` environment variables to the file. For example:
+- Before running the project please make sure you create a `.env` file to your project root directory and add `DATABASE_URI`, and `JWT_SECRET_KEY` environment variables to the file. For example:
 ```
-DATABASE_USER_NAME=place_your_postgres_database_username
-DATABASE_PASSWORD=place_your_database_password
-
-JWT_SECRET_KEY=place_your_jwt_secret_key
+DATABASE_URI="host=localhost port=5432 dbname=filmwise user=postgres password=your password sslmode=disable"
+JWT_SECRET="your jwt secret key"
 ```
-![back-end-env](https://github.com/Thinus01/Resort_Booking_Back-end/assets/35267447/3fd60673-53a2-4e6c-a386-ff894546c850)
-
-- After that make sure you change cors. To change the cors open the project with your favorite editor then click config folder then click initializers folder and open cors.rb file and after that change the `origins` to your front-end URL to solve the cross-origins request error. For example:
-```
-origins 'http://localhost:3000'
-```
-![cors](https://github.com/Thinus01/Resort_Booking_Back-end/assets/35267447/44eb387a-c8d5-40c8-b910-860ed9bf0195)
-
-- To generate the `JWT_SECRET_KEY` as a secure and random hash using Ruby's `SecureRandom module`. You can do this in a Ruby script or in your Rails console:
-```ruby
-require 'securerandom'
-
-jwt_secret_key = SecureRandom.hex(64)
-puts jwt_secret_key
-```
-This will generate a random string of 128 characters (64 bytes in hexadecimal representation) and print it to the console. Then you can copy it from the console and paste it into your .env file as a value of `JWT_SECRET_KEY`.
-
 
 ### Install
 
@@ -119,76 +102,45 @@ Install this project with:
 - Install the required gems with:
 
 ```sh
-bundle install
-npm install
+go mod tidy
 ```
 
 ### Database
 
-- Create the databases and run migrations with:
-
-```sh
-rails db:create
-rails db:migrate
-rails db:seed
-```
+- Create the databases properly, You need to open an SQL editor and run the `/database/schema.sql` file script. Make sure you run the script block by block.
 
 ### Usage
 
 - To run the development server, execute the following command:
 
 ```sh
-rails server
+go run ./cmd/api/ .
 ```
 
-`Note:` For more information about this back-end API end-points run the server and visit `project_base_url/api-docs` For example: `http://localhost:4000/api-docs`.
+### Build
 
-### Testing
-
-- To run tests, run the following command:
+- To build the project for production-ready run the following command:
 
 ```sh
-rspec spec 
+go build -o main ./cmd/api/*.go
 ```
 
 
 ### Deployment
 
-You can visit the app using [Render](https://www.render.com/)
+To deploy your project online You can visit [Render](https://www.render.com/)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-## 👥 Authors <a name="author"></a>
+## 👥 Author <a name="author"></a>
 
 👤 **Abu Raihan**
 
 - GitHub: [@raihan2bd](https://github.com/raihan2bd)
 - Twitter: [@raihan2bd](https://twitter.com/raihan2bd)
 - LinkedIn: [raihan2bd](https://linkedin.com/in/raihan2bd)
-
-### 👤 **Amaka Konwea**:
-- GitHub: [@lawrah_on_GitHub](https://github.com/lawrahkonwea)
-- Twitter: [@lawrah_on_Twitter](https://twitter.com/lawrah_xo)
-- LinkedIn: [@laura_on_LinkedIn](https://www.linkedin.com/in/amakalaurakonwea/)
-
-### 👤 **Thinus Van De Venter**
-
-- GitHub: [@Thinus01](https://github.com/Thinus01)
-- Twitter: [@thinus_v_d_v](https://twitter.com/thinus_v_d_v)
-- LinkedIn: [Thinus Van De Venter](https://www.linkedin.com/in/thinus-van-de-venter-99aa26203)
-
-👤 **Winnie Edube**
-
-- GitHub: [@edubew](https://github.com/edubew)
-- Twitter: [@edube_winne](https://twitter.com/edube_winne)
-- LinkedIn: [Winfred Edube](https://www.linkedin.com/in/winfred-edube/)
-
-👤 **Michale Kithinji**
-- GitHub: [@githubhandle](https://github.com/MICHAELKITH)
-- Twitter: [@twitterhandle](https://twitter.com/DevMichael11)
-- LinkedIn: [LinkedIn](https://www.linkedin.com/in/michaelkithinji/)
-
+  
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
@@ -203,7 +155,7 @@ You can visit the app using [Render](https://www.render.com/)
 
 Contributions, issues, and feature requests are welcome!
 
-Feel free to check the [issues page](https://github.com/lawrahkonwea/Rails_blog_app/issues).
+Feel free to check the [issues page](https://github.com/raihan2bd/filmwise/issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -217,14 +169,13 @@ If you like this project, please leave a ⭐️
 
 ## 🙏 Acknowledgments <a name="acknowledgements"></a>
 
-We want to give a big thanks to Microverse for giving us the chance to achieve this milestone
-We also want to thank [Murat Korkmaz](https://www.behance.net/muratk) for his [design](https://www.behance.net/gallery/26425031/Vespa-Responsive-Redesign), that our project is based on.
+I would like to thank [Trevor Sawler](https://www.gocode.ca/) Who helped me a lot to learn Golang.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 ## 📝 License <a name="license"></a>
 
-This project is [MIT](https://github.com/Thinus01/Resort_Booking_Back-end/blob/dev/LICENSE) licensed.
+This project is [MIT](./LICENSE) licensed.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
