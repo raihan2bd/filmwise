@@ -254,6 +254,89 @@ func (m *DBModel) GenresAll() ([]*Genre, error) {
 	return genres, nil
 }
 
+// GetFeatureMovies fetches the latest 5 featured movies from the database ordered by their update time
+func (m *DBModel) GetFeatureMovies(userID ...int) ([]*Movie, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// Retrieve latest 5 featured movies ordered by update time
+	query := `
+		SELECT m.id, m.title, m.description, m.year, m.release_date,
+		COALESCE(TRUNC(AVG(r.rating)::numeric, 1), 1.0) AS rating,
+		m.runtime, m.created_at, m.updated_at
+		FROM movies m
+		LEFT JOIN ratings r ON r.movie_id = m.id
+		GROUP BY m.id
+		ORDER BY m.updated_at DESC
+		LIMIT 5
+	`
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var movies []*Movie
+	for rows.Next() {
+		var movie Movie
+		err = rows.Scan(
+			&movie.ID,
+			&movie.Title,
+			&movie.Description,
+			&movie.Year,
+			&movie.ReleaseDate,
+			&movie.Rating,
+			&movie.Runtime,
+			&movie.CreatedAt,
+			&movie.UpdatedAt,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		// get genres, if any
+		genreQuery := `select
+			mg.id, mg.movie_id, mg.genre_id, g.genre_name
+		from
+			movies_genres mg
+			left join genres g on (g.id = mg.genre_id)
+		where
+			mg.movie_id = $1
+		`
+
+		genreRows, _ := m.DB.QueryContext(ctx, genreQuery, movie.ID)
+
+		genres := make(map[int]string)
+		for genreRows.Next() {
+			var mg MovieGenre
+			err := genreRows.Scan(
+				&mg.ID,
+				&mg.MovieID,
+				&mg.GenreID,
+				&mg.Genre.GenreName,
+			)
+			if err != nil {
+				return nil, err
+			}
+			genres[mg.GenreID] = mg.Genre.GenreName
+		}
+		genreRows.Close()
+
+		if len(userID) > 0 {
+			// check if movie is favorite
+			favoriteQuery := `select id from favorites where movie_id = $1 and user_id = $2`
+			_ = m.DB.QueryRowContext(ctx, favoriteQuery, movie.ID, userID[0]).Scan(&movie.IsFavorite)
+		}
+
+		movie.MovieGenre = genres
+		movies = append(movies, &movie)
+	}
+
+	return movies, nil
+}
+
 // Get all movies by filter
 func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, userID ...int) ([]*Movie, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
