@@ -355,12 +355,12 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, u
 	}
 
 	if filter.FilterByGenre > 0 && filter.FilterByYear <= 0 {
-		where += " and id in (select movie_id from movies_genres where genre_id = $3)"
+		where += " and m.id in (select movie_id from movies_genres where genre_id = $3)"
 		dbArgs = append(dbArgs, filter.FilterByGenre)
 	}
 
 	if (filter.FilterByGenre > 0) && (filter.FilterByYear > 0) {
-		where += " and id in (select movie_id from movies_genres where genre_id = $4)"
+		where += " and m.id in (select movie_id from movies_genres where genre_id = $4)"
 		dbArgs = append(dbArgs, filter.FilterByGenre)
 	}
 
@@ -380,7 +380,7 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, u
 	}
 
 	// main query
-	query := `SELECT 
+	query := `SELECT
 		m.id, 
 		m.title, 
 		m.description, 
@@ -403,6 +403,15 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, u
 
 	// pagination query
 	paginationQuery := fmt.Sprintf(" limit %d offset %d", perPage, offset)
+
+	countQuery := "SELECT COUNT(DISTINCT m.id) FROM movies m" + where
+	var totalCount int
+	err := m.DB.QueryRowContext(ctx, countQuery, dbArgs...).Scan(&totalCount)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(totalCount)
 
 	// join all the query
 	query += where + groupBYQuery + orderByQuery + paginationQuery
