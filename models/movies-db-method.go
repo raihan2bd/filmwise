@@ -338,7 +338,7 @@ func (m *DBModel) GetFeatureMovies(userID ...int) ([]*Movie, error) {
 }
 
 // Get all movies by filter
-func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, userID ...int) ([]*Movie, error) {
+func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, userID ...int) (*PaginatedMovies, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -482,7 +482,15 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, u
 		movies = append(movies, &movie)
 	}
 
-	return movies, nil
+	// Create and return the PaginatedMovies struct
+	paginatedMovies := &PaginatedMovies{
+		TotalCount:  totalCount,
+		PerPage:     perPage,
+		CurrentPage: page,
+		Movies:      movies,
+	}
+
+	return paginatedMovies, nil
 }
 
 // InsertMovie is help to insert new movie to the database

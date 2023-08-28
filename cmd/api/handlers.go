@@ -136,7 +136,7 @@ func (app *application) getAllMoviesByFilter(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, movies, "movies")
+	err = app.writeJSON(w, http.StatusOK, movies)
 	if err != nil {
 		app.errorJSON(w, err)
 		return

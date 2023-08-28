@@ -125,3 +125,11 @@ type User struct {
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
 }
+
+// Model for movies response
+type PaginatedMovies struct {
+	TotalCount  int      `json:"total_count"`
+	PerPage     int      `json:"per_page"`
+	CurrentPage int      `json:"current_page"`
+	Movies      []*Movie `json:"movies"`
+}
