@@ -411,8 +411,6 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, u
 		return nil, err
 	}
 
-	fmt.Println(totalCount)
-
 	// join all the query
 	query += where + groupBYQuery + orderByQuery + paginationQuery
 
