@@ -372,11 +372,11 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, u
 	case "runtime":
 		orderByQuery = " order by runtime desc"
 	case "old":
-		orderByQuery = " order by release_date asc"
+		orderByQuery = " order by updated_at asc"
 	case "name":
 		orderByQuery = " order by title asc"
 	default:
-		orderByQuery = " order by release_date desc"
+		orderByQuery = " order by updated_at desc"
 	}
 
 	// main query
