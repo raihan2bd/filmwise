@@ -1060,3 +1060,14 @@ func (app *application) signUp(w http.ResponseWriter, r *http.Request) {
 	resp.Message = "User have sign up successfully now login with your credentials!"
 	app.writeJSON(w, http.StatusOK, resp)
 }
+
+func (app *application) serveImages(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Extract the filename from the URL parameter
+	filename := ps.ByName("filename")
+
+	// Join the file path with the base directory path
+	imagePath := filepath.Join("./uploads/images", filename)
+
+	// Serve the image using http.ServeFile
+	http.ServeFile(w, r, imagePath)
+}
