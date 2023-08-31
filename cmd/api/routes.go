@@ -66,6 +66,7 @@ func (app *application) routes() http.Handler {
 	router.POST("/v1/admin/movie/add", app.wrap(secureAdmin.ThenFunc(app.AddNewMovie)))
 	router.PUT("/v1/admin/movie/edit", app.wrap(secureAdmin.ThenFunc(app.AddNewMovie)))
 	router.GET("/v1/admin/movie/delete/:id", app.wrap(secureAdmin.ThenFunc(app.deleteMovie)))
+	router.GET("/v1/image/:filename", app.serveImages)
 
 	return app.enableCORS(router)
 }
