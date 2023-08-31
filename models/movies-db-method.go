@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -261,7 +262,7 @@ func (m *DBModel) GetFeatureMovies(userID ...int) ([]*Movie, error) {
 
 	// Retrieve latest 5 featured movies ordered by update time
 	query := `
-		SELECT m.id, m.title, m.description, m.year, m.release_date,
+		SELECT m.id, m.title, m.image, m.description, m.year, m.release_date,
 		COALESCE(TRUNC(AVG(r.rating)::numeric, 1), 1.0) AS rating,
 		m.runtime, m.created_at, m.updated_at
 		FROM movies m
@@ -278,11 +279,13 @@ func (m *DBModel) GetFeatureMovies(userID ...int) ([]*Movie, error) {
 	defer rows.Close()
 
 	var movies []*Movie
+	var image sql.NullString
 	for rows.Next() {
 		var movie Movie
 		err = rows.Scan(
 			&movie.ID,
 			&movie.Title,
+			&image,
 			&movie.Description,
 			&movie.Year,
 			&movie.ReleaseDate,
@@ -294,6 +297,13 @@ func (m *DBModel) GetFeatureMovies(userID ...int) ([]*Movie, error) {
 
 		if err != nil {
 			return nil, err
+		}
+
+		// Check if the Image value is NULL or empty, and if it is, assign a default value
+		if !image.Valid || image.String == "" {
+			movie.Image = "/image/no-thumb.jpg"
+		} else {
+			movie.Image = image.String
 		}
 
 		// get genres, if any
@@ -382,7 +392,8 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, u
 	// main query
 	query := `SELECT
 		m.id, 
-		m.title, 
+		m.title,
+		m.image, 
 		m.description, 
 		m.year, 
 		m.release_date, 
@@ -422,11 +433,13 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, u
 	defer rows.Close()
 
 	var movies []*Movie
+	var image sql.NullString
 	for rows.Next() {
 		var movie Movie
 		err = rows.Scan(
 			&movie.ID,
 			&movie.Title,
+			&image,
 			&movie.Description,
 			&movie.Year,
 			&movie.ReleaseDate,
@@ -440,6 +453,13 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, u
 
 		if err != nil {
 			return nil, err
+		}
+
+		// Check if the Image value is NULL or empty, and if it is, assign a default value
+		if !image.Valid || image.String == "" {
+			movie.Image = "/image/no-thumb.jpg"
+		} else {
+			movie.Image = image.String
 		}
 
 		// get genres, if any
@@ -637,6 +657,7 @@ func (m *DBModel) Get(id int) (*Movie, error) {
 	row := m.DB.QueryRowContext(ctx, query, id)
 
 	var movie Movie
+	var image sql.NullString
 
 	err := row.Scan(
 		&movie.ID,
@@ -645,12 +666,19 @@ func (m *DBModel) Get(id int) (*Movie, error) {
 		&movie.Year,
 		&movie.ReleaseDate,
 		&movie.Runtime,
-		&movie.Image,
+		&image,
 		&movie.CreatedAt,
 		&movie.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// Check if the Image value is NULL or empty, and if it is, assign a default value
+	if !image.Valid || image.String == "" {
+		movie.Image = "/image/no-thumb.jpg"
+	} else {
+		movie.Image = image.String
 	}
 
 	// get genres, if any
