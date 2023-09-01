@@ -650,9 +650,13 @@ func (m *DBModel) Get(id int) (*Movie, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `select id, title, description, year, release_date, runtime, image,
-				created_at, updated_at from movies where id = $1
-	`
+	query := `SELECT m.id, m.title, m.description, m.year, m.release_date, m.runtime, m.image, m.created_at, m.updated_at,
+    COALESCE(TRUNC(AVG(r.rating)::numeric, 1), 1.0) AS rating
+FROM movies m
+LEFT JOIN ratings r ON r.movie_id = m.id
+WHERE m.id = $1
+GROUP BY m.id;
+`
 
 	row := m.DB.QueryRowContext(ctx, query, id)
 
@@ -669,6 +673,7 @@ func (m *DBModel) Get(id int) (*Movie, error) {
 		&image,
 		&movie.CreatedAt,
 		&movie.UpdatedAt,
+		&movie.Rating,
 	)
 	if err != nil {
 		return nil, err
@@ -682,22 +687,21 @@ func (m *DBModel) Get(id int) (*Movie, error) {
 	}
 
 	// get genres, if any
-	query = `select
-				mg.id, mg.movie_id, mg.genre_id, g.genre_name
-			from
-				movies_genres mg
-				left join genres g on (g.id = mg.genre_id)
-			where
-				mg.movie_id = $1
-	`
+	genreQuery := `select
+	mg.id, mg.movie_id, mg.genre_id, g.genre_name
+from
+	movies_genres mg
+	left join genres g on (g.id = mg.genre_id)
+where
+	mg.movie_id = $1
+`
 
-	rows, _ := m.DB.QueryContext(ctx, query, id)
-	defer rows.Close()
+	genreRows, _ := m.DB.QueryContext(ctx, genreQuery, movie.ID)
 
 	genres := make(map[int]string)
-	for rows.Next() {
+	for genreRows.Next() {
 		var mg MovieGenre
-		err := rows.Scan(
+		err := genreRows.Scan(
 			&mg.ID,
 			&mg.MovieID,
 			&mg.GenreID,
@@ -706,10 +710,45 @@ func (m *DBModel) Get(id int) (*Movie, error) {
 		if err != nil {
 			return nil, err
 		}
-		genres[mg.ID] = mg.Genre.GenreName
+		genres[mg.GenreID] = mg.Genre.GenreName
 	}
+	defer genreRows.Close()
 
 	movie.MovieGenre = genres
+
+	// Get comments ordered by recent update
+	query = `SELECT
+    c.id, c.user_id, c.comment, c.created_at, c.updated_at, u.name
+    FROM
+    	comments c
+    LEFT JOIN users u ON (u.id = c.user_id)
+    WHERE
+    	c.movie_id = $1
+  	ORDER BY c.created_at DESC
+    `
+
+	rows, _ := m.DB.QueryContext(ctx, query, id)
+	defer rows.Close()
+
+	var comments []Comment
+	for rows.Next() {
+		var comment Comment
+		err := rows.Scan(
+			&comment.ID,
+			&comment.UserID,
+			&comment.Comment,
+			&comment.CreatedAt,
+			&comment.UpdatedAt,
+			&comment.UserName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+
+	movie.Comments = comments
+	movie.TotalComments = len(comments)
 
 	return &movie, nil
 }
