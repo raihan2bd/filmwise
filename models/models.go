@@ -89,7 +89,8 @@ type Rating struct {
 type Comment struct {
 	ID        int       `json:"id"`
 	UserID    int       `json:"user_id"`
-	MovieID   int       `json:"movie_id"`
+	UserName  string    `json:"user_name"`
+	MovieID   int       `json:"movie_id,omitempty"`
 	Comment   string    `json:"comment"`
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"commented_at"`
