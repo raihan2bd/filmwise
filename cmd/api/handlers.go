@@ -299,7 +299,6 @@ func (app *application) AddNewMovie(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			}
-			fmt.Println("hi")
 			movie.Image = image.ImageName
 		}
 		respMsg = "Movie is successfully updated"
