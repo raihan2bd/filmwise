@@ -930,6 +930,7 @@ type credentials struct {
 
 // custom claims
 type CustomClaims struct {
+	UserName string `json:"name"`
 	UserType string `json:"user_type"`
 	jwt.StandardClaims
 }
@@ -959,6 +960,7 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 	// custom claims
 	claims := CustomClaims{
 		UserType: user.UserType,
+		UserName: user.FullName,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 			IssuedAt:  time.Now().Unix(),
