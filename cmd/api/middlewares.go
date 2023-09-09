@@ -29,7 +29,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		// if auth header is empty then return error
 		if authHeader == "" {
-			app.errorJSON(w, errors.New("authorization header is required"))
+			app.errorJSON(w, errors.New("authorization header is required"), http.StatusUnauthorized)
 			return
 		}
 
@@ -37,13 +37,13 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		// if auth header is not two parts then return error
 		if len(headerParts) != 2 {
-			app.errorJSON(w, errors.New("invalid auth header"))
+			app.errorJSON(w, errors.New("invalid auth header"), http.StatusUnauthorized)
 			return
 		}
 
 		// if auth header doesn't include Bearer then return error
 		if headerParts[0] != "Bearer" {
-			app.errorJSON(w, errors.New("unauthorized - no bearer"))
+			app.errorJSON(w, errors.New("unauthorized - no bearer"), http.StatusUnauthorized)
 			return
 		}
 
@@ -62,7 +62,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			// add user_id to context
 			userID, err := strconv.Atoi(claims.Subject)
 			if err != nil {
-				app.errorJSON(w, errors.New("unauthorized - user does not is not valid"))
+				app.errorJSON(w, errors.New("unauthorized - user does not is not valid"), http.StatusUnauthorized)
 				return
 			}
 
@@ -70,7 +70,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			// next.ServeHTTP(w, r)
 		} else {
-			app.errorJSON(w, errors.New("unauthorized - user does not have permission"))
+			app.errorJSON(w, errors.New("unauthorized - user does not have permission"), http.StatusUnauthorized)
 			return
 		}
 
