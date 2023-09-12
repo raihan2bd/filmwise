@@ -818,7 +818,7 @@ func (app *application) addOrUpdateFavorite(w http.ResponseWriter, r *http.Reque
 		Message string `json:"message"`
 	}
 
-	resp.OK = false
+	resp.OK = true
 	resp.ID = payload.MovieID
 	resp.Message = respMsg
 
