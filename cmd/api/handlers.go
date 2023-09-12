@@ -602,7 +602,7 @@ func (app *application) addOrUpdateRating(w http.ResponseWriter, r *http.Request
 	resp.ID = id
 	resp.Message = respMsg
 
-	err = app.writeJSON(w, http.StatusOK, resp)
+	err = app.writeJSON(w, http.StatusCreated, resp)
 	if err != nil {
 		app.errorJSON(w, err)
 	}
