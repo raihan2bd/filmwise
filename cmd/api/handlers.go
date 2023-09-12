@@ -128,7 +128,7 @@ func (app *application) getAllMoviesByFilter(w http.ResponseWriter, r *http.Requ
 	filter.OrderBy = queryValues.Get("order_by")
 
 	// get userID from bareaer token
-	userID := 1
+	userID, _ := app.parseHeaderToken(r)
 
 	movies, err := app.models.DB.GetAllMoviesByFilter(page, perPage, &filter, userID)
 	if err != nil {
@@ -345,7 +345,9 @@ func (app *application) getOneMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	movie, err := app.models.DB.Get(id)
+	userID, _ := app.parseHeaderToken(r)
+
+	movie, err := app.models.DB.GetOneMovie(id, userID)
 	if err != nil {
 		app.errorJSON(w, errors.New("failed to fetch the movie"))
 		return
@@ -738,34 +740,76 @@ func (app *application) deleteComment(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Add Favorite
-func (app *application) addFavorite(w http.ResponseWriter, r *http.Request) {
-	params := httprouter.ParamsFromContext(r.Context())
+// Add or Update Favorite
+func (app *application) addOrUpdateFavorite(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		MovieID int `json:"movie_id"`
+	}
 
-	id, err := strconv.Atoi(params.ByName("id"))
+	// get user id from context
+	userID, ok := r.Context().Value(userIDKey("user_id")).(int)
+	if !ok {
+		app.errorJSON(w, errors.New("invalid user type"))
+		return
+	}
+
+	if userID <= 0 {
+		app.errorJSON(w, errors.New("authentication failed"), http.StatusUnauthorized)
+		return
+	}
+
+	// read json from the body
+	err := app.readJSON(w, r, &payload)
 	if err != nil {
-		app.errorJSON(w, errors.New("invalid id"))
+		app.logger.Println(err.Error())
+		app.errorJSON(w, errors.New("invalid json request"))
+		return
+	}
+
+	validator := validator.New()
+	if payload.MovieID <= 0 {
+		validator.AddError("movie_id", "invalid movie id")
+	}
+
+	if !validator.Valid() {
+		err := app.writeJSON(w, http.StatusBadRequest, validator)
+		if err != nil {
+			app.badRequest(w, r, err)
+			return
+		}
 		return
 	}
 
 	// check if the movie exists
-	_, err = app.models.DB.Get(id)
+	_, err = app.models.DB.Get(payload.MovieID)
 	if err != nil {
 		app.errorJSON(w, errors.New("invalid movie id"))
 		return
 	}
 
-	// user authentication will be added later
-	favorite := models.Favorite{
-		UserID:    1,
-		MovieID:   id,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	_, err = app.models.DB.AddFavorite(&favorite)
-	if err != nil {
-		app.errorJSON(w, err)
-		return
+	favID, _ := app.models.DB.FindFavorites(userID, payload.MovieID)
+
+	respMsg := "movie is successfully added to favorites!"
+
+	if favID > 0 {
+		err = app.models.DB.RemoveFavorite(favID)
+		if err != nil {
+			app.errorJSON(w, err)
+			return
+		}
+		respMsg = "movie is successfully removed from favorites!"
+	} else {
+		favorite := models.Favorite{
+			UserID:    userID,
+			MovieID:   payload.MovieID,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+		_, err = app.models.DB.AddFavorite(&favorite)
+		if err != nil {
+			app.errorJSON(w, err)
+			return
+		}
 	}
 
 	var resp struct {
@@ -775,49 +819,8 @@ func (app *application) addFavorite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp.OK = false
-	resp.ID = id
-	resp.Message = "movie is successfully added to favorites!"
-
-	err = app.writeJSON(w, http.StatusOK, resp)
-	if err != nil {
-		app.errorJSON(w, err)
-		return
-	}
-}
-
-// Remove Favorite
-func (app *application) removeFavorite(w http.ResponseWriter, r *http.Request) {
-	params := httprouter.ParamsFromContext(r.Context())
-
-	id, err := strconv.Atoi(params.ByName("id"))
-	if err != nil {
-		app.errorJSON(w, errors.New("invalid id"))
-		return
-	}
-
-	// check if the movie exists
-	_, err = app.models.DB.Get(id)
-	if err != nil {
-		app.errorJSON(w, errors.New("invalid movie id"))
-		return
-	}
-
-	// user authentication will be added later
-	err = app.models.DB.RemoveFavorite(id)
-	if err != nil {
-		app.errorJSON(w, err)
-		return
-	}
-
-	var resp struct {
-		OK      bool   `json:"ok"`
-		ID      int    `json:"id"`
-		Message string `json:"message"`
-	}
-
-	resp.OK = false
-	resp.ID = id
-	resp.Message = "movie is successfully removed from favorites!"
+	resp.ID = payload.MovieID
+	resp.Message = respMsg
 
 	err = app.writeJSON(w, http.StatusOK, resp)
 	if err != nil {

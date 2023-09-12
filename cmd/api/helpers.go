@@ -5,6 +5,8 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -119,4 +121,36 @@ func (app *application) verifyToken(tokenString string) (*CustomClaims, error) {
 
 	// return claims
 	return claims, nil
+}
+
+// parseHeaderToken extracts the Authorization token from an HTTP response.
+func (app *application) parseHeaderToken(r *http.Request) (int, error) {
+	authHeader := r.Header.Get("Authorization")
+
+	// Check if the Authorization header is present
+	if authHeader == "" {
+		return 0, errors.New("authorization header is missing")
+	}
+
+	// Split the header value to get the token part (e.g., "Bearer <token>")
+	headerParts := strings.Split(authHeader, " ")
+
+	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+		return 0, errors.New("invalid authorization header format")
+	}
+
+	// Extract the token
+	token := headerParts[1]
+
+	claims, err := app.verifyToken(token)
+	if err != nil {
+		return 0, err
+	}
+
+	userID, err := strconv.Atoi(claims.Subject)
+	if err != nil {
+		return 0, errors.New("invalid user id")
+	}
+
+	return userID, nil
 }

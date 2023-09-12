@@ -493,7 +493,12 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, u
 		if len(userID) > 0 {
 			// check if movie is favorite
 			favoriteQuery := `select id from favorites where movie_id = $1 and user_id = $2`
-			_ = m.DB.QueryRowContext(ctx, favoriteQuery, movie.ID, userID[0]).Scan(&movie.IsFavorite)
+			var favID int
+			_ = m.DB.QueryRowContext(ctx, favoriteQuery, movie.ID, userID[0]).Scan(&favID)
+
+			if favID > 0 {
+				movie.IsFavorite = true
+			}
 		}
 
 		movie.MovieGenre = genres
@@ -767,6 +772,128 @@ func (m *DBModel) DeleteMovie(id int) error {
 	return nil
 }
 
+// Get returns one movie and error, if any
+func (m *DBModel) GetOneMovie(id, userID int) (*Movie, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `SELECT m.id, m.title, m.description, m.year, m.release_date, m.runtime, m.image, m.created_at, m.updated_at,
+    COALESCE(TRUNC(AVG(r.rating)::numeric, 1), 1.0) AS rating,
+		COUNT(DISTINCT f.id) AS favorites_count
+FROM movies m
+LEFT JOIN ratings r ON r.movie_id = m.id
+LEFT JOIN favorites f ON f.movie_id = m.id
+WHERE m.id = $1
+GROUP BY m.id;
+`
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+
+	var movie Movie
+	var image sql.NullString
+
+	err := row.Scan(
+		&movie.ID,
+		&movie.Title,
+		&movie.Description,
+		&movie.Year,
+		&movie.ReleaseDate,
+		&movie.Runtime,
+		&image,
+		&movie.CreatedAt,
+		&movie.UpdatedAt,
+		&movie.Rating,
+		&movie.TotalFavorites,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if the Image value is NULL or empty, and if it is, assign a default value
+	if !image.Valid || image.String == "" {
+		movie.Image = "/image/no-thumb.jpg"
+	} else {
+		movie.Image = image.String
+	}
+
+	// get genres, if any
+	genreQuery := `select
+	mg.id, mg.movie_id, mg.genre_id, g.genre_name
+from
+	movies_genres mg
+	left join genres g on (g.id = mg.genre_id)
+where
+	mg.movie_id = $1
+`
+
+	genreRows, _ := m.DB.QueryContext(ctx, genreQuery, movie.ID)
+
+	genres := make(map[int]string)
+	for genreRows.Next() {
+		var mg MovieGenre
+		err := genreRows.Scan(
+			&mg.ID,
+			&mg.MovieID,
+			&mg.GenreID,
+			&mg.Genre.GenreName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		genres[mg.GenreID] = mg.Genre.GenreName
+	}
+	defer genreRows.Close()
+
+	movie.MovieGenre = genres
+
+	// Get comments ordered by recent update
+	query = `SELECT
+    c.id, c.user_id, c.comment, c.created_at, c.updated_at, u.name
+    FROM
+    	comments c
+    LEFT JOIN users u ON (u.id = c.user_id)
+    WHERE
+    	c.movie_id = $1
+  	ORDER BY c.created_at DESC
+    `
+
+	rows, _ := m.DB.QueryContext(ctx, query, id)
+	defer rows.Close()
+
+	var comments []Comment
+	for rows.Next() {
+		var comment Comment
+		err := rows.Scan(
+			&comment.ID,
+			&comment.UserID,
+			&comment.Comment,
+			&comment.CreatedAt,
+			&comment.UpdatedAt,
+			&comment.UserName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+
+	movie.Comments = comments
+	movie.TotalComments = len(comments)
+
+	if userID > 0 {
+		// check if movie is favorite
+		favoriteQuery := `select id from favorites where movie_id = $1 and user_id = $2`
+		var favID int
+		_ = m.DB.QueryRowContext(ctx, favoriteQuery, id, userID).Scan(&favID)
+
+		if favID > 0 {
+			movie.IsFavorite = true
+		}
+	}
+
+	return &movie, nil
+}
+
 // CheckComment returns comment_id and error, if any
 func (m *DBModel) CheckComment(commentID int) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -867,6 +994,23 @@ func (m *DBModel) DeleteComment(id int) error {
 	}
 
 	return nil
+}
+
+// FindFavorites is helps to find any favorite is exist base on movie_id and user_id
+func (m *DBModel) FindFavorites(userID, movieID int) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `select id from favorites where movie_id = $1 and user_id = $2`
+
+	favID := 0
+
+	err := m.DB.QueryRowContext(ctx, query, movieID, userID).Scan(&favID)
+	if err != nil {
+		return 0, errors.New("Favorite does not found")
+	}
+
+	return favID, nil
 }
 
 // AddFavorite is help to add a favorite movie to the database
