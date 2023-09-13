@@ -614,13 +614,25 @@ func (app *application) addOrUpdateRating(w http.ResponseWriter, r *http.Request
 // comment payload
 type commentPayload struct {
 	Comment   string `json:"comment"`
-	MovieID   string `json:"movie_id"`
+	MovieID   int    `json:"movie_id"`
 	CommentID string `json:"comment_id"`
 }
 
 // Add or Update a comment
 func (app *application) addOrUpdateComment(w http.ResponseWriter, r *http.Request) {
 	var payload commentPayload
+
+	// get user id from context
+	userID, ok := r.Context().Value(userIDKey("user_id")).(int)
+	if !ok {
+		app.errorJSON(w, errors.New("invalid user type"))
+		return
+	}
+
+	if userID <= 0 {
+		app.errorJSON(w, errors.New("authentication failed"), http.StatusUnauthorized)
+		return
+	}
 
 	// read json from the body
 	err := app.readJSON(w, r, &payload)
@@ -646,9 +658,11 @@ func (app *application) addOrUpdateComment(w http.ResponseWriter, r *http.Reques
 
 	validator := validator.New()
 	validator.IsLength(payload.Comment, "comment", 10, 500)
-	validator.Required(payload.MovieID, "movie_id", "movie_id is required")
 
-	movieID, err := strconv.Atoi(payload.MovieID)
+	if payload.MovieID <= 0 {
+		validator.AddError("movie_id", "invalid movie_id!")
+	}
+
 	if err != nil {
 		validator.AddError("movie_id", "invalid movie_id!")
 	}
@@ -664,8 +678,8 @@ func (app *application) addOrUpdateComment(w http.ResponseWriter, r *http.Reques
 
 	var comment models.Comment
 	comment.Comment = strings.Trim(payload.Comment, "")
-	comment.MovieID = movieID
-	comment.UserID = 1
+	comment.MovieID = payload.MovieID
+	comment.UserID = userID
 	comment.CreatedAt = time.Now()
 	comment.UpdatedAt = time.Now()
 
@@ -689,7 +703,7 @@ func (app *application) addOrUpdateComment(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	resp.OK = false
+	resp.OK = true
 	resp.ID = commentID
 	resp.Message = respMsg
 
