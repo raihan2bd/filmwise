@@ -742,8 +742,12 @@ func (app *application) deleteComment(w http.ResponseWriter, r *http.Request) {
 
 // Add or Update Favorite
 func (app *application) addOrUpdateFavorite(w http.ResponseWriter, r *http.Request) {
-	var payload struct {
-		MovieID int `json:"movie_id"`
+	ps := r.Context().Value("params").(httprouter.Params)
+	movieID, err := strconv.Atoi(ps.ByName("id"))
+
+	if err != nil {
+		app.errorJSON(w, errors.New("invalid request"))
+		return
 	}
 
 	// get user id from context
@@ -758,36 +762,14 @@ func (app *application) addOrUpdateFavorite(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// read json from the body
-	err := app.readJSON(w, r, &payload)
-	if err != nil {
-		app.logger.Println(err.Error())
-		app.errorJSON(w, errors.New("invalid json request"))
-		return
-	}
-
-	validator := validator.New()
-	if payload.MovieID <= 0 {
-		validator.AddError("movie_id", "invalid movie id")
-	}
-
-	if !validator.Valid() {
-		err := app.writeJSON(w, http.StatusBadRequest, validator)
-		if err != nil {
-			app.badRequest(w, r, err)
-			return
-		}
-		return
-	}
-
 	// check if the movie exists
-	_, err = app.models.DB.Get(payload.MovieID)
+	_, err = app.models.DB.Get(movieID)
 	if err != nil {
 		app.errorJSON(w, errors.New("invalid movie id"))
 		return
 	}
 
-	favID, _ := app.models.DB.FindFavorites(userID, payload.MovieID)
+	favID, _ := app.models.DB.FindFavorites(userID, movieID)
 
 	respMsg := "movie is successfully added to favorites!"
 
@@ -801,7 +783,7 @@ func (app *application) addOrUpdateFavorite(w http.ResponseWriter, r *http.Reque
 	} else {
 		favorite := models.Favorite{
 			UserID:    userID,
-			MovieID:   payload.MovieID,
+			MovieID:   movieID,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
@@ -819,7 +801,7 @@ func (app *application) addOrUpdateFavorite(w http.ResponseWriter, r *http.Reque
 	}
 
 	resp.OK = true
-	resp.ID = payload.MovieID
+	resp.ID = movieID
 	resp.Message = respMsg
 
 	err = app.writeJSON(w, http.StatusOK, resp)
