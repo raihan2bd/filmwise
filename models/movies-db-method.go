@@ -303,7 +303,7 @@ func (m *DBModel) GetFeatureMovies(userID ...int) ([]*Movie, error) {
 		if !image.Valid || image.String == "" {
 			movie.Image = "/image/no-thumb.jpg"
 		} else {
-			movie.Image = image.String
+			movie.Image = fmt.Sprintf("/image/%s", image.String)
 		}
 
 		// get genres, if any
@@ -459,7 +459,7 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, u
 		if !image.Valid || image.String == "" {
 			movie.Image = "/image/no-thumb.jpg"
 		} else {
-			movie.Image = image.String
+			movie.Image = fmt.Sprintf("/image/%s", image.String)
 		}
 
 		// get genres, if any
@@ -688,7 +688,7 @@ GROUP BY m.id;
 	if !image.Valid || image.String == "" {
 		movie.Image = "/image/no-thumb.jpg"
 	} else {
-		movie.Image = image.String
+		movie.Image = fmt.Sprintf("/image/%s", image.String)
 	}
 
 	// get genres, if any
@@ -813,7 +813,7 @@ GROUP BY m.id;
 	if !image.Valid || image.String == "" {
 		movie.Image = "/image/no-thumb.jpg"
 	} else {
-		movie.Image = image.String
+		movie.Image = fmt.Sprintf("/image/%s", image.String)
 	}
 
 	// get genres, if any
