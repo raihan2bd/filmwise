@@ -361,9 +361,9 @@ func (app *application) getOneMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) deleteMovie(w http.ResponseWriter, r *http.Request) {
-	params := httprouter.ParamsFromContext(r.Context())
+	ps := r.Context().Value("params").(httprouter.Params)
+	id, err := strconv.Atoi(ps.ByName("id"))
 
-	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.errorJSON(w, errors.New("invalid id"))
 		return
@@ -371,22 +371,28 @@ func (app *application) deleteMovie(w http.ResponseWriter, r *http.Request) {
 
 	// get movie image
 	movieImage, err := app.models.DB.GetImageByMovieID(id)
-	if err != nil {
-		app.errorJSON(w, errors.New("invalid movie id"))
-		return
-	}
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	app.errorJSON(w, errors.New("invalid movie id"))
+	// 	return
+	// }
 
 	// if image is exists then delete it
-	if movieImage.ID > 0 {
-		err = app.models.DB.DeleteImage(movieImage)
-		if err != nil {
-			app.errorJSON(w, errors.New("invalid movie id"))
-			return
+	if err == nil {
+		if movieImage.ID > 0 {
+			err = app.models.DB.DeleteImage(movieImage)
+			if err != nil {
+				fmt.Println(err)
+				app.errorJSON(w, errors.New("invalid movie id"))
+				return
+			}
 		}
 	}
+	fmt.Println("i'm working")
 
 	err = app.models.DB.DeleteMovie(id)
 	if err != nil {
+		fmt.Println(err)
 		app.errorJSON(w, err)
 		return
 	}
