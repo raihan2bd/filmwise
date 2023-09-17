@@ -527,7 +527,6 @@ func (m *DBModel) InsertMovie(movie *Movie) (int, map[int]string, error) {
 	// return if movie title is already exist
 	q := `select id from movies where title = $1`
 	_ = m.DB.QueryRowContext(ctx, q, movie.Title).Scan(&movieID)
-	fmt.Println(movieID)
 	if movieID > 0 {
 		return movieID, movieGenres, errors.New("the movie is already exist")
 	}
@@ -540,7 +539,6 @@ func (m *DBModel) InsertMovie(movie *Movie) (int, map[int]string, error) {
 		if err != nil {
 			return movieID, movieGenres, errors.New("invalid genre name")
 		}
-		fmt.Println(genreID)
 		if genreID > 0 {
 			if _, exists := movieGenres[genreID]; !exists {
 				movieGenres[genreID] = val
@@ -599,7 +597,6 @@ func (m *DBModel) UpdateMovie(movie *Movie) (int, map[int]string, error) {
 		if err != nil {
 			return movieID, movieGenres, errors.New("invalid genre name")
 		}
-		fmt.Println(genreID)
 		if genreID > 0 {
 			if _, exists := movieGenres[genreID]; !exists {
 				movieGenres[genreID] = val

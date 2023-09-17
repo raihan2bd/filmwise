@@ -382,17 +382,14 @@ func (app *application) deleteMovie(w http.ResponseWriter, r *http.Request) {
 		if movieImage.ID > 0 {
 			err = app.models.DB.DeleteImage(movieImage)
 			if err != nil {
-				fmt.Println(err)
 				app.errorJSON(w, errors.New("invalid movie id"))
 				return
 			}
 		}
 	}
-	fmt.Println("i'm working")
 
 	err = app.models.DB.DeleteMovie(id)
 	if err != nil {
-		fmt.Println(err)
 		app.errorJSON(w, err)
 		return
 	}
