@@ -1,18 +1,19 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/cloudinary/cloudinary-go/v2/api/admin"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/golang-jwt/jwt"
-	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/raihan2bd/filmwise/models"
 	"github.com/raihan2bd/filmwise/validator"
@@ -380,6 +381,11 @@ func (app *application) deleteMovie(w http.ResponseWriter, r *http.Request) {
 	// if image is exists then delete it
 	if err == nil {
 		if movieImage.ID > 0 {
+			// delete image from the server
+			_, _ = app.models.CLD.Admin.DeleteAssets(context.Background(), admin.DeleteAssetsParams{
+				PublicIDs: []string{movieImage.ImagePath},
+			})
+
 			err = app.models.DB.DeleteImage(movieImage)
 			if err != nil {
 				app.errorJSON(w, errors.New("invalid movie id"))
@@ -828,8 +834,112 @@ func (app *application) addOrUpdateFavorite(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// upload image to the server
+// // upload image to the local server
+// func (app *application) uploadImage(w http.ResponseWriter, r *http.Request) {
+// 	// check if the request is multipart
+// 	if !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+// 		app.badRequest(w, r, errors.New("invalid content type"))
+// 		return
+// 	}
+
+// 	// parse the multipart form
+// 	err := r.ParseMultipartForm(2 << 20)
+// 	if err != nil {
+// 		app.badRequest(w, r, err)
+// 		return
+// 	}
+
+// 	// get the file from the form
+// 	file, fileHeader, err := r.FormFile("image")
+// 	if err != nil {
+// 		app.badRequest(w, r, err)
+// 		return
+// 	}
+
+// 	// close the file
+// 	defer file.Close()
+
+// 	// validate the file
+// 	if fileHeader.Size > 10<<20 {
+// 		app.badRequest(w, r, errors.New("file size should be less than 10MB"))
+// 		return
+// 	}
+
+// 	// create a buffer to store the file
+// 	fileBytes := make([]byte, fileHeader.Size)
+// 	_, err = file.Read(fileBytes)
+// 	if err != nil {
+// 		app.badRequest(w, r, err)
+// 		return
+// 	}
+
+// 	// create a file name
+// 	fileName := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(fileHeader.Filename))
+
+// 	// create folder if it doesn't exist
+// 	err = os.MkdirAll("./uploads/images", 0755)
+// 	if err != nil {
+// 		app.badRequest(w, r, err)
+// 		return
+// 	}
+
+// 	// upload the file to the server
+// 	err = os.WriteFile(filepath.Join("./uploads/images", fileName), fileBytes, 0644)
+// 	if err != nil {
+// 		app.badRequest(w, r, errors.New("can't upload the file to the server"))
+// 		return
+// 	}
+
+// 	// will face userId from the token later
+// 	userID := 1
+
+// 	// insert image to the database
+// 	image := models.Image{
+// 		ImagePath: "/uploads/images",
+// 		ImageName: fileName,
+// 		UserID:    userID,
+// 	}
+
+// 	id, err := app.models.DB.InsertImageInfo(&image)
+// 	if err != nil {
+// 		// delete the uploaded file
+// 		err = os.Remove(filepath.Join("./uploads/images", fileName))
+// 		if err != nil {
+// 			app.badRequest(w, r, errors.New("can't manage the uploaded file"))
+// 			return
+// 		}
+
+// 		app.badRequest(w, r, errors.New("can't insert image info to the database"))
+// 		return
+// 	}
+
+// 	var resp struct {
+// 		OK      bool   `json:"ok"`
+// 		ID      int    `json:"id"`
+// 		Message string `json:"message"`
+// 	}
+
+// 	resp.OK = true
+// 	resp.ID = id
+// 	resp.Message = fileName
+
+// 	err = app.writeJSON(w, http.StatusOK, resp)
+// 	if err != nil {
+// 		app.errorJSON(w, err)
+// 		return
+// 	}
+// }
+
+// upload image to the local server
 func (app *application) uploadImage(w http.ResponseWriter, r *http.Request) {
+
+	// get user id from context
+	userID, ok := r.Context().Value(userIDKey("user_id")).(int)
+	if !ok {
+		app.errorJSON(w, errors.New("invalid user type"), http.StatusUnauthorized)
+		return
+	}
+
 	// check if the request is multipart
 	if !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
 		app.badRequest(w, r, errors.New("invalid content type"))
@@ -854,52 +964,61 @@ func (app *application) uploadImage(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	// validate the file
-	if fileHeader.Size > 2<<20 {
-		app.badRequest(w, r, errors.New("file size should be less than 2MB"))
+	if fileHeader.Size > 10<<20 {
+		app.badRequest(w, r, errors.New("file size should be less than 10MB"))
 		return
 	}
 
-	// create a buffer to store the file
-	fileBytes := make([]byte, fileHeader.Size)
-	_, err = file.Read(fileBytes)
+	// upload file to the
+	resp, err := app.models.CLD.Upload.Upload(context.Background(), file, uploader.UploadParams{})
+
 	if err != nil {
-		app.badRequest(w, r, err)
+		app.errorJSON(w, errors.New("failed to upload the image"), http.StatusInternalServerError)
 		return
 	}
 
-	// create a file name
-	fileName := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(fileHeader.Filename))
+	// You can access the uploaded image URL using uploadResult.SecureURL or other fields
 
-	// create folder if it doesn't exist
-	err = os.MkdirAll("./uploads/images", 0755)
-	if err != nil {
-		app.badRequest(w, r, err)
-		return
-	}
+	// // create a buffer to store the file
+	// fileBytes := make([]byte, fileHeader.Size)
+	// _, err = file.Read(fileBytes)
+	// if err != nil {
+	// 	app.badRequest(w, r, err)
+	// 	return
+	// }
 
-	// upload the file to the server
-	err = os.WriteFile(filepath.Join("./uploads/images", fileName), fileBytes, 0644)
-	if err != nil {
-		app.badRequest(w, r, errors.New("can't upload the file to the server"))
-		return
-	}
+	// // create a file name
+	// fileName := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(fileHeader.Filename))
 
-	// will face userId from the token later
-	userID := 1
+	// // create folder if it doesn't exist
+	// err = os.MkdirAll("./uploads/images", 0755)
+	// if err != nil {
+	// 	app.badRequest(w, r, err)
+	// 	return
+	// }
+
+	// // upload the file to the server
+	// err = os.WriteFile(filepath.Join("./uploads/images", fileName), fileBytes, 0644)
+	// if err != nil {
+	// 	app.badRequest(w, r, errors.New("can't upload the file to the server"))
+	// 	return
+	// }
 
 	// insert image to the database
 	image := models.Image{
-		ImagePath: "/uploads/images",
-		ImageName: fileName,
+		ImagePath: resp.PublicID,
+		ImageName: fmt.Sprintf("%s.%s", resp.PublicID, resp.Format),
 		UserID:    userID,
 	}
 
 	id, err := app.models.DB.InsertImageInfo(&image)
 	if err != nil {
-		// delete the uploaded file
-		err = os.Remove(filepath.Join("./uploads/images", fileName))
+		_, err = app.models.CLD.Admin.DeleteAssets(context.Background(), admin.DeleteAssetsParams{
+			PublicIDs: []string{resp.PublicID},
+		})
+
 		if err != nil {
-			app.badRequest(w, r, errors.New("can't manage the uploaded file"))
+			app.badRequest(w, r, errors.New("can't insert image info to the database"))
 			return
 		}
 
@@ -907,17 +1026,17 @@ func (app *application) uploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var resp struct {
+	var userResp struct {
 		OK      bool   `json:"ok"`
 		ID      int    `json:"id"`
 		Message string `json:"message"`
 	}
 
-	resp.OK = true
-	resp.ID = id
-	resp.Message = fileName
+	userResp.OK = true
+	userResp.ID = id
+	userResp.Message = image.ImageName
 
-	err = app.writeJSON(w, http.StatusOK, resp)
+	err = app.writeJSON(w, http.StatusOK, userResp)
 	if err != nil {
 		app.errorJSON(w, err)
 		return

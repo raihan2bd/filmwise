@@ -3,6 +3,8 @@ package models
 import (
 	"database/sql"
 	"time"
+
+	"github.com/cloudinary/cloudinary-go/v2"
 )
 
 type DBModel struct {
@@ -11,13 +13,15 @@ type DBModel struct {
 
 // Models is the wrapper for database
 type Models struct {
-	DB DBModel
+	DB  DBModel
+	CLD *cloudinary.Cloudinary
 }
 
 // NewModels returns models with db pool
-func NewModels(db *sql.DB) Models {
+func NewModels(db *sql.DB, cld *cloudinary.Cloudinary) Models {
 	return Models{
-		DB: DBModel{DB: db},
+		DB:  DBModel{DB: db},
+		CLD: cld,
 	}
 }
 

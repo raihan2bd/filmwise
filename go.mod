@@ -14,3 +14,9 @@ require (
 	github.com/justinas/alice v1.2.0
 	golang.org/x/crypto v0.8.0
 )
+
+require (
+	github.com/cloudinary/cloudinary-go/v2 v2.4.0 // indirect
+	github.com/creasty/defaults v1.5.1 // indirect
+	github.com/gorilla/schema v1.2.0 // indirect
+)

@@ -301,9 +301,9 @@ func (m *DBModel) GetFeatureMovies(userID ...int) ([]*Movie, error) {
 
 		// Check if the Image value is NULL or empty, and if it is, assign a default value
 		if !image.Valid || image.String == "" {
-			movie.Image = "/image/no-thumb.jpg"
+			movie.Image = fmt.Sprintf("https://res.cloudinary.com/%s/image/upload/no-thumb.jpg", os.Getenv("CLOUD_NAME"))
 		} else {
-			movie.Image = fmt.Sprintf("/image/%s", image.String)
+			movie.Image = fmt.Sprintf("https://res.cloudinary.com/%s/image/upload/%s", os.Getenv("CLOUD_NAME"), image.String)
 		}
 
 		// get genres, if any
@@ -457,9 +457,9 @@ func (m *DBModel) GetAllMoviesByFilter(page, perPage int, filter *MovieFilter, u
 
 		// Check if the Image value is NULL or empty, and if it is, assign a default value
 		if !image.Valid || image.String == "" {
-			movie.Image = "/image/no-thumb.jpg"
+			movie.Image = fmt.Sprintf("https://res.cloudinary.com/%s/image/upload/no-thumb.jpg", os.Getenv("CLOUD_NAME"))
 		} else {
-			movie.Image = fmt.Sprintf("/image/%s", image.String)
+			movie.Image = fmt.Sprintf("https://res.cloudinary.com/%s/image/upload/%s", os.Getenv("CLOUD_NAME"), image.String)
 		}
 
 		// get genres, if any
@@ -683,9 +683,9 @@ GROUP BY m.id;
 
 	// Check if the Image value is NULL or empty, and if it is, assign a default value
 	if !image.Valid || image.String == "" {
-		movie.Image = "/image/no-thumb.jpg"
+		movie.Image = fmt.Sprintf("https://res.cloudinary.com/%s/image/upload/no-thumb.jpg", os.Getenv("CLOUD_NAME"))
 	} else {
-		movie.Image = fmt.Sprintf("/image/%s", image.String)
+		movie.Image = fmt.Sprintf("https://res.cloudinary.com/%s/image/upload/%s", os.Getenv("CLOUD_NAME"), image.String)
 	}
 
 	// get genres, if any
@@ -808,9 +808,9 @@ GROUP BY m.id;
 
 	// Check if the Image value is NULL or empty, and if it is, assign a default value
 	if !image.Valid || image.String == "" {
-		movie.Image = "/image/no-thumb.jpg"
+		movie.Image = fmt.Sprintf("https://res.cloudinary.com/%s/image/upload/no-thumb.jpg", os.Getenv("CLOUD_NAME"))
 	} else {
-		movie.Image = fmt.Sprintf("/image/%s", image.String)
+		movie.Image = fmt.Sprintf("https://res.cloudinary.com/%s/image/upload/%s", os.Getenv("CLOUD_NAME"), image.String)
 	}
 
 	// get genres, if any
@@ -1143,19 +1143,34 @@ func (m *DBModel) DeleteImage(image *Image) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	// delete image from the server
-	err := os.Remove(fmt.Sprintf(".%s/%s", image.ImagePath, image.ImageName))
-	if err != nil {
-		return errors.New("failed to delete the image from the server")
-	}
-
 	// delete image info from the database
 	stmt := "delete from images where id = $1"
-
-	_, err = m.DB.ExecContext(ctx, stmt, image.ID)
+	_, err := m.DB.ExecContext(ctx, stmt, image.ID)
 	if err != nil {
 		return errors.New("failed to delete the image from the database")
 	}
 
 	return nil
 }
+
+// // delete image info from the database and file from the server
+// func (m *DBModel) DeleteImage(image *Image) error {
+// 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+// 	defer cancel()
+
+// 	// delete image from the server
+// 	err := os.Remove(fmt.Sprintf(".%s/%s", image.ImagePath, image.ImageName))
+// 	if err != nil {
+// 		return errors.New("failed to delete the image from the server")
+// 	}
+
+// 	// delete image info from the database
+// 	stmt := "delete from images where id = $1"
+
+// 	_, err = m.DB.ExecContext(ctx, stmt, image.ID)
+// 	if err != nil {
+// 		return errors.New("failed to delete the image from the database")
+// 	}
+
+// 	return nil
+// }

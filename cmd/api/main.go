@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/raihan2bd/filmwise/models"
@@ -84,10 +85,16 @@ func main() {
 	}
 	defer db.Close()
 
+	cld, err := cloudinary.NewFromURL(os.Getenv("CLD_URI"))
+
+	if err != nil {
+		logger.Fatalf("failed to intialize Cloudinary, %v", err)
+	}
+
 	app := &application{
 		config: cfg,
 		logger: logger,
-		models: models.NewModels(db),
+		models: models.NewModels(db, cld),
 	}
 
 	srv := &http.Server{
