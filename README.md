@@ -206,6 +206,13 @@ To deploy your project online You can visit [Render](https://www.render.com/)
 - GitHub: [@raihan2bd](https://github.com/raihan2bd)
 - Twitter: [@raihan2bd](https://twitter.com/raihan2bd)
 - LinkedIn: [raihan2bd](https://linkedin.com/in/raihan2bd)
+
+
+👤 **Hassaan Baig**
+
+- GitHub: [@Hassaanjbaig](https://github.com/Hassaanjbaig-code/)
+- LinkedIn [Hassan Baig](https://linkedin.com/in/hassaan-jawwad=baig)
+
   
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
