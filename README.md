@@ -93,7 +93,71 @@ In order to run this project you need:
 ```
 DATABASE_URI="host=localhost port=5432 dbname=filmwise user=postgres password=your password sslmode=disable"
 JWT_SECRET="your jwt secret key"
+CLD_URI="Secreat Key of cloudinary"
+CLOUD_NAME="Name of cloudinary account"
 ```
+
+### Getting JWT Secret Key
+
+To obtain the JWT secret key, please <a href="https://go.dev/play/" target="_blank" style="color: blue; font-size: 12px; text-decoration: underline;">click here</a>.
+
+An open Go terminal is required. In the terminal, please copy the following code and paste it into your <span style="color: lightblue;">.env</span> file.
+
+Like this
+
+JWT_SECRET="*******"
+
+```
+
+package main
+
+import (
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
+)
+
+func main() {
+	// Define the desired length of the secret key in bytes
+	keyLength := 64 // Adjust the length as needed
+
+	// Create a byte slice to hold the random bytes
+	key := make([]byte, keyLength)
+
+	// Generate random bytes using crypto/rand
+	_, err := rand.Read(key)
+	if err != nil {
+		fmt.Println("Error generating random bytes:", err)
+		return
+	}
+
+	// Encode the random bytes in base64 to create a string
+	secretKey := base64.StdEncoding.EncodeToString(key)
+
+	fmt.Println("Generated JWT secret key:", secretKey)
+}
+
+```
+
+### Getting Cloudinary Serect key and Name
+
+Cloudinary is a cloud-based media management platform that helps businesses and developers efficiently store, manage, and deliver images and videos for websites and applications. It provides features like image and video uploading, storage, transformation, optimization, and content delivery via a content delivery network (CDN), making it easier to handle media assets in web and mobile applications. Cloudinary's services can enhance website performance, user experience, and streamline media asset workflows.
+
+For using this you need to <a href="https://cloudinary.com/users/register_free" target="_blank" style="hover:text-decoration: underline; font-size:1.1rem">Create an account</a> Or if you have an Account you need to <a href="https://cloudinary.com/users/login" target="_blank" style="hover:text-decoration: underline; font-size:1.2rem;">Sign In </a>
+
+After that go into the <span style="color: #3448c5;">Dashborad</span>
+
+Copy the <span style="color: #3448c5;">Cloud Name</span> and
+<span style="color: #3448c5;">API Environment variable</span>
+
+```
+CLD_URI="cloudinary://******"
+
+CLOUD_NAME="****"
+
+```
+
+
 
 ### Install
 
@@ -124,6 +188,8 @@ go run ./cmd/api/ .
 ```sh
 go build -o main ./cmd/api/*.go
 ```
+
+
 
 
 ### Deployment
