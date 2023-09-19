@@ -74,11 +74,6 @@ FilmWise: Your Ultimate Movie Hub. Experience movies like never before with Film
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-> <a href="https://filmwise-front.vercel.app/" target="_blank">Live Demo Link</a>
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ### Key Features <a name="key-features"></a>
 
 - Discover detailed movie information, from plots to cast.
