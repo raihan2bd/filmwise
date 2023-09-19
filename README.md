@@ -55,7 +55,7 @@ FilmWise: Your Ultimate Movie Hub. Experience movies like never before with Film
 
 ## 🚀 Live Demo <a name="live-demo"></a>
 
-> Live demo will update soon!.
+> <a href="https://filmwise-front.vercel.app/" target="_blank">Live Demo Link</a>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
