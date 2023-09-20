@@ -57,17 +57,22 @@ FilmWise: Your Ultimate Movie Hub. Experience movies like never before with Film
 
 - Project ScreenShot
 
-<img src="./ReadmePic/filmwise-front.vercel.app_ (1).png" width="500" height="400" style="margin-bottom:2rem" />
+![Capture](https://github-production-user-asset-6210df.s3.amazonaws.com/35267447/269177343-28e03d43-c9c2-493b-ab4a-447884cb80e5.PNG)
 
+![Capture2](https://github-production-user-asset-6210df.s3.amazonaws.com/35267447/269177383-fad4b05b-868f-4721-8a15-3ae2219d2791.PNG)
 
+![Capture3](https://github-production-user-asset-6210df.s3.amazonaws.com/35267447/269177404-dd500d3f-1077-4c39-ae5e-0e139991e903.PNG)
 
-<img src="./ReadmePic/filmwise-front.vercel.app_ (2).png" width="500" height="400" style="margin-bottom:2rem" />
+![Capture4](https://github-production-user-asset-6210df.s3.amazonaws.com/35267447/269177423-ffb82686-4413-43a0-9814-9125da5b6722.PNG)
 
+![Capture5](https://github-production-user-asset-6210df.s3.amazonaws.com/35267447/269177434-0e2a5f53-b5d4-4395-9639-43f29c78d0ad.PNG)
 
-<img src="./ReadmePic/filmwise-front.vercel.app_ (3).png" width="500" height="400" style="margin-bottom:2rem" />
+![Capture6](https://github-production-user-asset-6210df.s3.amazonaws.com/35267447/269177442-f659f94b-f9a1-47fd-90c7-495d88cbd191.PNG)
 
+![Capture7](https://github-production-user-asset-6210df.s3.amazonaws.com/35267447/269177463-2f08dc17-2fb2-479d-a759-d6e4213e6865.PNG)
 
-<img src="./ReadmePic/filmwise-front.vercel.app_ (5).png" height="400" style="margin-bottom:2rem" />
+![Capture8](https://github-production-user-asset-6210df.s3.amazonaws.com/35267447/269177469-9f97149a-e199-4e24-92e4-6891bae9360d.PNG)
+![Capture9](https://github-production-user-asset-6210df.s3.amazonaws.com/35267447/269177483-7a8bada7-b3c8-4a6d-977e-7a3cb6d8e464.PNG)
 
 
 > <a href="https://filmwise-front.vercel.app/" target="_blank">Live Demo Link</a>
