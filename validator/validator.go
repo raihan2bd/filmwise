@@ -137,13 +137,13 @@ func (v *Validator) IsValidPassword(password, key string, minLength ...int) {
 // IsValidFullName validates the FullName with the given key
 func (v *Validator) IsValidFullName(fullName, key string) {
 	// Regular expression pattern for full name
-	pattern := `^([A-Z][a-z]{1,})(\s[A-Z][a-z]{1,})+$`
+	pattern := `^[A-Za-z][A-Za-z0-9 ]*$`
 
 	// Compile the regular expression
 	regex := regexp.MustCompile(pattern)
 
 	// Check if the name matches the regular expression pattern
 	if !regex.MatchString(fullName) {
-		v.AddError(key, "Invalid full name. Please enter a valid full name that contains only letters, spaces, and the following characters: ', . -")
+		v.AddError(key, "Invalid full name. Please enter a valid full name that contains only letters, numbers, and spaces.")
 	}
 }
